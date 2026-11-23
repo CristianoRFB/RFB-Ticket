@@ -7,7 +7,7 @@
   "default_branch_baseline": "dbd16775e4b4f47a855fd67a736294421ee1f6b9",
   "working_branch": "feature/rfb-starter-pack-v1",
   "draft_pr": 1,
-  "last_reviewed_code_sha": "0727d5100b4d95c2fb5fe726af6df0d128cf7070",
+  "last_reviewed_code_sha": "c0f85cd7f2d8be13c4216e7e3d90d1bf3e6ded72",
   "stage": "G3_LOCAL_WORKER_D1_SANDBOX_TESTED_NOT_REMOTE_HOMOLOGATED",
   "user_target_percent": 100,
   "verified_completion_percent": null,
@@ -25,18 +25,19 @@
   "tests": {
     "backend_node_sqlite": "PASS_17_OF_17_NODE24_GITHUB_ACTIONS",
     "domain": "PASS_5_OF_5_NODE24_GITHUB_ACTIONS",
-    "workerd_d1_local": "PASS_8_OF_8_REAL_MINIFLARE_D1_NODE24",
+    "workerd_d1_local": "PASS_10_OF_10_REAL_MINIFLARE_D1_NODE24",
     "vitest_frontend": "PASS_2_OF_2",
     "playwright_demo_chromium": "PASS_6_OF_6_DESKTOP_MOBILE",
     "cloudflare_dry_run": "PASS_CF_DEPLOY_DRY_RUN_NO_API",
     "cf_d1_migration_local": "PASS_SYNTHETIC_UUID",
     "build_typecheck": "PASS_NODE24",
-    "github_actions": "PASS_4_JOBS_PER_RUN_AT_0727",
-    "github_actions_run": 45178640841,
+    "github_actions": "PASS_4_JOBS_PER_RUN_AT_C0F85",
+    "github_actions_run": 45179829134,
     "remote_firebase": "NOT_RUN",
     "remote_d1": "NOT_RUN",
     "physical_device": "NOT_RUN",
-    "payment_provider": "NOT_RUN"
+    "payment_provider": "NOT_RUN",
+    "browser_last_known": "PASS_6_OF_6_DEMO_AT_C0F85"
   },
   "cloudflare": {
     "account_read_only_audited": true,
@@ -55,7 +56,7 @@
   "production": false,
   "no_merge": true,
   "no_billing": true,
-  "next_action": "Keep PR Draft; isolate Firebase Spark Auth and RFB-Ticket D1 staging with Free quotas and credentials authorized; verify remote D1 + Firebase end-to-end, physical camera gate, failure modes, backup/restore, gateway sandbox; then review/merge/release with approval.",
+  "next_action": "Deploy an isolated test environment only after Firebase and Cloudflare Free plan and approval verified. Run authenticated real user E2E (all 5 roles), D1 remote concurrency, camera devices, backup recovery, formal F01-F12 and screen acceptance; gateway vendor sandbox still missing.",
   "scope_details": {
     "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
     "F05_webhook": "FAKE_PROVIDER_SIGNED_WEBHOOK_IMPLEMENTED_LOCAL_NO_REAL_GATEWAY",
@@ -78,10 +79,22 @@
     "F05": "HMAC_FAKE_PROVIDER_WEBHOOK_LOCAL_TESTED_REAL_GATEWAY_NOT_DONE",
     "F06": "HMAC_SIGNED_ROTATABLE_QR_LOCAL_TESTED",
     "F07": "ONE_USE_ATOMIC_D1_LOCAL_CONCURRENCY_TESTED",
-    "F08": "ROLE_GATE_BROWSER_CAMERA_UNVERIFIED_DEVICE",
+    "F08": "ROLE_GATE_SCANNER_MEMOIZED_DEVICE_UNVERIFIED",
     "F09": "STATS_OWNER_ONLY_CSV_5000_LOCAL_TESTED",
     "F10": "CANCEL_REFUND_FAKE_ATOMIC_CAPACITY_RELEASE_LOCAL_TESTED",
-    "F11": "ONE_TIME_TRANSFER_OLD_TOKEN_REVOKED_NODE_SQLITE_ONLY",
+    "F11": "ONE_TIME_TRANSFER_QR_ROTATION_WORKERD_D1_TESTED",
     "F12": "AUDIT_WRITES_LOCAL_TESTED_PRIVACY_POLICY_PENDING"
+  },
+  "screens": {
+    "total_catalogued": 58,
+    "code_sandbox_only": 26,
+    "partial_sandbox": 21,
+    "not_implemented": 11,
+    "live_authenticated_browser_qa": "NOT_RUN"
+  },
+  "diagrams": {
+    "original_drafts": 7,
+    "new_as_built_mermaid": 7,
+    "homologated": false
   }
 }

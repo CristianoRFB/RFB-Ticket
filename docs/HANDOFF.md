@@ -43,3 +43,10 @@ Novos recursos: consulta de estoque sem holds expirados, limite de 5 holds simul
 **Próxima fatia concreta:** inventariar quotas/ambiente Firebase e Cloudflare; criar apenas sandbox isolado aprovado sem cobrança; rodar auth Firebase real, transações D1 remotas com concorrência em dois dispositivos, checkin e camera; ensaiar export/import/recovery antes de liberar público pagante.
 
 **Rollback:** PR #1 Draft não mesclado; main inalterada. Reverter SHA de alterações em branch sem afetar recursos terceiros.
+
+
+## S009 — 2026-11-23 BRT: verificações e UI/diagramas
+
+Code SHA testado c0f85cd7f2d8be13c4216e7e3d90d1bf3e6ded72, CI https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45179829134 4/4 jobs PASS. Workerd+D1 **10/10 PASS** inclui transferência QR e admin UID read-only; backend SQLite 17/17 PASS, domínio 5/5 PASS, Chromium demo 6/6 PASS, typecheck/build/cf dry-run PASS. Nenhum recurso Firebase/D1 remoto conectado.
+
+Cobertura T001–T058 no documento UX: 26 sandbox-coded, 21 partial, 11 not implemented; 0 homologated remote. `docs/AS-BUILT-DIAGRAMS.md` descreve D001–D007 do código sem substituir diagramas conceituais. Próximo fluxo: staging isolado, PSP fake->provider real sandbox, QA authenticated/mobile, compliance/DR, revisão/merge com autorização. PR #1 mantém Draft.

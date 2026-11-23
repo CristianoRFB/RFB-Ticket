@@ -14,7 +14,7 @@
 | F08 / AC-08 Fiscal autorizado | Staff gate por evento, scanner BarcodeDetector/manual, revogação imediata | Node SQLite e Workerd D1 RBAC | Teste câmera Android/iOS, acessibilidade e permissões |
 | F09 / AC-09 Relatórios | KPIs por evento e CSV privado até 5000 checkins (ticket number + timestamp) | Node SQLite, Workerd D1 export/negação | Paginação, retenção, relatório de grandes eventos |
 | F10 / AC-10 Cancelamento/refundo | Cancelar reserva, evento e reembolso **fictício**; token revogado e capacidade devolvida | Node SQLite + Workerd D1 | Gate financeiro sandbox real, política de estorno, nenhum dinheiro transferido |
-| F11 / AC-11 Transferência | Transferência única UID->UID, rotação QR anterior, proibida após uso | Node SQLite | Workerd D1 dedicado, prova identidade destinatário, UX |
+| F11 / AC-11 Transferência | Transferência única UID->UID, rotação QR anterior, proibida após uso | Node SQLite | Workerd D1 transferência/QR rotacionado PASS; prova identidade destinatário, UX real |
 | F12 / AC-12 Auditoria | Log de ações sensíveis por evento e relatórios restritos | Node SQLite | Negativas sanitizadas, retenção LGPD, alertas e exportação revisada |
 
 **Atores:** visitante, comprador, organizador, fiscal, administrador leitura restrita. Os cinco possuem rotas/fluxos de sandbox; identidade real ainda não foi testada.

@@ -56,3 +56,8 @@ A branch Draft agora possui controle de expiração de reservas, limite atômico
 `npm run test:workerd` verifica o Worker e D1 em ambiente local isolado com Firebase JWTs de teste assinados. **Não** prova Firebase, D1 ou pagamentos reais. Leia [Matriz de aceite](docs/ACCEPTANCE-MATRIX.md), [QA S008](docs/QA-REPORT-2026-11-23-S008.md) e [checkpoint](PROJECT_STATUS.json).
 
 **Sem deploy, merge, cobrança ou criação de recursos persistentes.**
+
+
+### S009 — escopo efetivamente testado
+
+[Workerd+D1: 10 testes PASS (run 45179829134)](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45179829134), incluindo transferência uma vez, QR antigo revogado e administração somente-leitura por UID do servidor. [Diagramas conforme código](docs/AS-BUILT-DIAGRAMS.md) e [cobertura T001–T058](docs/UX-DESIGN-AND-QA.md) atualizados. Ainda sem Firebase remoto, gateway financeiro real, produção e câmera homologada.

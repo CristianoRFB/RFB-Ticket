@@ -65,3 +65,12 @@ Mudanças reais desta rodada:
 **Custo:** zero recursos persistentes de RFB-Ticket ou serviços faturáveis criados. Banco D1 e Workers de outros projetos foram preservados. Metas Free continuam condicionadas ao plano real e quotas verificadas.
 
 **Next:** projeto Firebase isolado, D1 RFB-Ticket staging, auth E2E e corrida remota, dois aparelhos + câmera, provider sandbox real, backup/restore/LGPD; depois revisão humana, prod approval e merge.
+
+
+## S009 — 23/11/2026: F11 e administração validados em Workerd
+
+**Código revisado:** c0f85cd7f2d8be13c4216e7e3d90d1bf3e6ded72, GitHub Actions https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45179829134 — backend/frontend/browser-demo/edge-d1-integration 4/4 jobs SUCCESS. `tests/workerd.node-test.mjs` passa **10/10** incluindo transferência com rotação de QR e negação do token antigo, plus admin UID server-bound read-only. `src/LiveApp.tsx` usa callback estável para câmera, preserva scanner após erro e indica ausência de suporte a getUserMedia.
+
+Inventário de telas T001–T058 atualizado em `docs/UX-DESIGN-AND-QA.md`: **26** mapeadas a código de sandbox, **21** parcialmente e **11** não implementadas; nenhum dos 58 IDs tem homologação autenticada remota. Criado `docs/AS-BUILT-DIAGRAMS.md` com sete fluxos/componentes do sistema efetivo; os 7 originais continuam como conceituais. A especificação original não foi sobrescrita.
+
+**Gates externos ainda BLOQUEADOS:** Firebase Auth real, D1 remoto, PSP sandbox real, aparelhos câmera, retenção LGPD, backup/restauração, produção. Nunca afirmar 100%.

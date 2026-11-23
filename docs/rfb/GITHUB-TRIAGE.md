@@ -22,3 +22,8 @@ HEAD `0727d5100b4d95c2fb5fe726af6df0d128cf7070`; PR #1 continua aberto DRAFT, ne
 Consolidação de S008 está neste checkpoint; commits relevantes: `649c3ab` estoque/cancelamento, `b098fa1` UI, `7987086` D1 concurrency, `9d9032d` webhook/tenant Workerd, `f35d1d7` refund release, `a62af7f` CSV Workerd, `4d19e38` limite holds, `0727d51` testes limite concorrente.
 
 **Não fechar/mesclar PR:** gate remoto Firebase/D1, parceiro de pagamentos sandbox, privacidade/backup, câmera/aparelhos e AC ainda não homologados.
+
+
+## Triagem pós S009 — 2026-11-23
+
+Head de código c0f85cd7f2d8be13c4216e7e3d90d1bf3e6ded72. A CI 45179829134 passou nos 4 jobs (inclusive 10 testes reais Workerd+D1 local). No início da revisão S009: Issues abertas=0, PRs abertos=1 (#1 Draft), reviews=0, comentários=0, main não alterada. Sem aceitar/fechar PR, pois falta homologação remota/financeira e UX de produção.

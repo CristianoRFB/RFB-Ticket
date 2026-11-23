@@ -41,64 +41,64 @@ Outros arquivos do original: `design/desktop.svg`, `design/mobile.svg`, 8 PNG de
 
 | Tela | Especificação original | Estágio |
 |---|---|---|
-| T001 | Landing / apresentação | `NOT_IMPLEMENTED` |
-| T002 | Cadastro / criar conta | `NOT_IMPLEMENTED` |
-| T003 | Login e recuperar acesso | `NOT_IMPLEMENTED` |
+| T001 | Landing / apresentação | `PARTIAL_SANDBOX` |
+| T002 | Cadastro / criar conta | `PARTIAL_SANDBOX` |
+| T003 | Login e recuperar acesso | `PARTIAL_SANDBOX` |
 | T004 | Onboarding e perfil | `NOT_IMPLEMENTED` |
-| T005 | Página principal / feed | `NOT_IMPLEMENTED` |
+| T005 | Página principal / feed | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T006 | Busca e filtros | `NOT_IMPLEMENTED` |
-| T007 | Detalhes do recurso | `NOT_IMPLEMENTED` |
-| T008 | Fluxo de criação | `NOT_IMPLEMENTED` |
-| T009 | Fluxo de edição | `NOT_IMPLEMENTED` |
-| T010 | Confirmação / revisão | `NOT_IMPLEMENTED` |
-| T011 | Estado concluído / recibo | `NOT_IMPLEMENTED` |
-| T012 | Lista pessoal / histórico | `NOT_IMPLEMENTED` |
+| T007 | Detalhes do recurso | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T008 | Fluxo de criação | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T009 | Fluxo de edição | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T010 | Confirmação / revisão | `PARTIAL_SANDBOX` |
+| T011 | Estado concluído / recibo | `PARTIAL_SANDBOX` |
+| T012 | Lista pessoal / histórico | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T013 | Notificações | `NOT_IMPLEMENTED` |
 | T014 | Mensagens ou contato | `NOT_IMPLEMENTED` |
 | T015 | Central de ajuda | `NOT_IMPLEMENTED` |
 | T016 | Preferências e privacidade | `NOT_IMPLEMENTED` |
-| T017 | Acesso e segurança | `NOT_IMPLEMENTED` |
-| T018 | Página vazia / primeira vez | `NOT_IMPLEMENTED` |
-| T019 | Carregamento e skeleton | `NOT_IMPLEMENTED` |
-| T020 | Erro de rede / retentar | `NOT_IMPLEMENTED` |
-| T021 | Sem permissão / bloqueio | `NOT_IMPLEMENTED` |
-| T022 | Estado de conflito concorrente | `NOT_IMPLEMENTED` |
-| T023 | Admin: visão geral | `NOT_IMPLEMENTED` |
+| T017 | Acesso e segurança | `PARTIAL_SANDBOX` |
+| T018 | Página vazia / primeira vez | `PARTIAL_SANDBOX` |
+| T019 | Carregamento e skeleton | `PARTIAL_SANDBOX` |
+| T020 | Erro de rede / retentar | `PARTIAL_SANDBOX` |
+| T021 | Sem permissão / bloqueio | `PARTIAL_SANDBOX` |
+| T022 | Estado de conflito concorrente | `PARTIAL_SANDBOX` |
+| T023 | Admin: visão geral | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T024 | Admin: gestão de usuários | `NOT_IMPLEMENTED` |
 | T025 | Admin: moderação e auditoria | `NOT_IMPLEMENTED` |
 | T026 | Admin: regras e configurações | `NOT_IMPLEMENTED` |
-| T027 | Admin: relatórios | `NOT_IMPLEMENTED` |
+| T027 | Admin: relatórios | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T028 | Página 404 / recurso indisponível | `NOT_IMPLEMENTED` |
-| T029 | Módulo / Eventos — lista | `NOT_IMPLEMENTED` |
-| T030 | Módulo / Eventos — detalhe | `NOT_IMPLEMENTED` |
-| T031 | Módulo / Eventos — criar/editar | `NOT_IMPLEMENTED` |
-| T032 | Módulo / Lotes e capacidade — lista | `NOT_IMPLEMENTED` |
-| T033 | Módulo / Lotes e capacidade — detalhe | `NOT_IMPLEMENTED` |
-| T034 | Módulo / Lotes e capacidade — criar/editar | `NOT_IMPLEMENTED` |
-| T035 | Módulo / Checkout — lista | `NOT_IMPLEMENTED` |
-| T036 | Módulo / Checkout — detalhe | `NOT_IMPLEMENTED` |
-| T037 | Módulo / Checkout — criar/editar | `NOT_IMPLEMENTED` |
-| T038 | Módulo / Emissão de ingressos — lista | `NOT_IMPLEMENTED` |
-| T039 | Módulo / Emissão de ingressos — detalhe | `NOT_IMPLEMENTED` |
-| T040 | Módulo / Emissão de ingressos — criar/editar | `NOT_IMPLEMENTED` |
-| T041 | Módulo / Meus ingressos — lista | `NOT_IMPLEMENTED` |
-| T042 | Módulo / Meus ingressos — detalhe | `NOT_IMPLEMENTED` |
-| T043 | Módulo / Meus ingressos — criar/editar | `NOT_IMPLEMENTED` |
-| T044 | Módulo / Leitor de QR — lista | `NOT_IMPLEMENTED` |
-| T045 | Módulo / Leitor de QR — detalhe | `NOT_IMPLEMENTED` |
-| T046 | Módulo / Leitor de QR — criar/editar | `NOT_IMPLEMENTED` |
-| T047 | Módulo / Check-in — lista | `NOT_IMPLEMENTED` |
+| T029 | Módulo / Eventos — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T030 | Módulo / Eventos — detalhe | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T031 | Módulo / Eventos — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T032 | Módulo / Lotes e capacidade — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T033 | Módulo / Lotes e capacidade — detalhe | `PARTIAL_SANDBOX` |
+| T034 | Módulo / Lotes e capacidade — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T035 | Módulo / Checkout — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T036 | Módulo / Checkout — detalhe | `PARTIAL_SANDBOX` |
+| T037 | Módulo / Checkout — criar/editar | `PARTIAL_SANDBOX` |
+| T038 | Módulo / Emissão de ingressos — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T039 | Módulo / Emissão de ingressos — detalhe | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T040 | Módulo / Emissão de ingressos — criar/editar | `PARTIAL_SANDBOX` |
+| T041 | Módulo / Meus ingressos — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T042 | Módulo / Meus ingressos — detalhe | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T043 | Módulo / Meus ingressos — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T044 | Módulo / Leitor de QR — lista | `PARTIAL_SANDBOX` |
+| T045 | Módulo / Leitor de QR — detalhe | `PARTIAL_SANDBOX` |
+| T046 | Módulo / Leitor de QR — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T047 | Módulo / Check-in — lista | `PARTIAL_SANDBOX` |
 | T048 | Módulo / Check-in — detalhe | `NOT_IMPLEMENTED` |
-| T049 | Módulo / Check-in — criar/editar | `NOT_IMPLEMENTED` |
-| T050 | Módulo / Reembolso — lista | `NOT_IMPLEMENTED` |
-| T051 | Módulo / Reembolso — detalhe | `NOT_IMPLEMENTED` |
-| T052 | Módulo / Reembolso — criar/editar | `NOT_IMPLEMENTED` |
-| T053 | Módulo / Painel do organizador — lista | `NOT_IMPLEMENTED` |
-| T054 | Módulo / Painel do organizador — detalhe | `NOT_IMPLEMENTED` |
-| T055 | Módulo / Painel do organizador — criar/editar | `NOT_IMPLEMENTED` |
-| T056 | Módulo / Relatórios — lista | `NOT_IMPLEMENTED` |
-| T057 | Módulo / Relatórios — detalhe | `NOT_IMPLEMENTED` |
-| T058 | Módulo / Relatórios — criar/editar | `NOT_IMPLEMENTED` |
+| T049 | Módulo / Check-in — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T050 | Módulo / Reembolso — lista | `PARTIAL_SANDBOX` |
+| T051 | Módulo / Reembolso — detalhe | `PARTIAL_SANDBOX` |
+| T052 | Módulo / Reembolso — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T053 | Módulo / Painel do organizador — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T054 | Módulo / Painel do organizador — detalhe | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T055 | Módulo / Painel do organizador — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T056 | Módulo / Relatórios — lista | `PARTIAL_SANDBOX` |
+| T057 | Módulo / Relatórios — detalhe | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T058 | Módulo / Relatórios — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 
 **Prioridade de desenvolvimento:** T001 apresentação, T003 login se realmente requerido, T005 primeira tela do produto, T007 recurso, T008 criação, T009 edição, T010 confirmação, T018–T022 vazios/erro/concorrência, T028 404 e T029–T031 primeiro módulo, mais telas necessárias ao fluxo end-to-end. Não gerar telas de admin/moderação sem domínio, autorização e dados reais de teste.
 
@@ -118,4 +118,12 @@ A lista de 58 telas não obriga implementar 58 páginas idênticas: revisar redu
 - [ ] Cores/contraste, motion/reduced-motion, CLS e imagens/performance avaliados.
 - [ ] Publicação somente com gate de segurança, custo e permissão do usuário.
 
-**Status no RFB Method:** `SCREEN_CATALOG_IMPORTED / ORIGINAL_DESIGN_REFERENCED / BROWSER_QA_NOT_RUN`.
+**Status no RFB Method (S009):** `SCREEN_CATALOG_MAPPED / SANDBOX_SOME_COMPONENTS_CODED / LIVE_AUTHENTICATED_BROWSER_QA_NOT_RUN`. Navegador Playwright aprovou somente a demonstração sintética (6/6); o modo Firebase autenticado não foi executado em navegador. Consulte `docs/AS-BUILT-DIAGRAMS.md` e a matriz F01–F12.
+
+## Auditoria de cobertura S009 — 2026-11-23
+
+Os 58 T-IDs referem-se a intenções de tela, **não 58 páginas separadas**. Mapeamos 26 para controles/rotas já codificados no sandbox, 21 parcialmente cobertos e 11 sem implementação. `CODE_SANDBOX_NOT_E2E_REMOTE` significa código existente em LiveApp/Worker com gates de identidade e banco remotos pendentes, **não homologação**. `PARTIAL_SANDBOX` representa componentes compartilhados que não atendem o contrato integral. Os IDs restantes são `NOT_IMPLEMENTED`.
+
+- Falta em T003: recuperação de conta; T006: busca/filtros; T013–T016: notificações, contato, ajuda e preferências; T024–T026: ferramentas administrativas de gestão/moderação; T028: 404 dedicada; T048: detalhe individual de check-in. T001 é parcialmente coberta pelo shell do produto.
+- Foco após integrar Firebase/D1 em staging: T003, T006, T015, T019–T022, T028 e T047–T049 com QA física. Não gerar ferramentas administrativas sem aceite de RBAC/LGPD.
+- O widget câmera depende de `BarcodeDetector`, exige HTTPS/permissão e possui fallback manual. O Playwright atual valida somente a versão sintética não autenticada.
