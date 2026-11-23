@@ -126,6 +126,17 @@ export default function LiveApp() {
   async function doManage(path:string,body:unknown={}) {if(!user||!manageId)return;await run(async()=>{
     await api('/api/events/'+manageId+'/'+path,user,'POST',body);await refresh();await reloadManaged(manageId);setMessage('Operação de organização concluída.');
   });}
+  async function downloadCheckins() {if(!user||!manageId)return;await run(async()=>{
+    const response=await fetch('/api/events/'+manageId+'/checkins.csv',{
+      headers:{Authorization:'Bearer '+await user.getIdToken()},credentials:'omit'
+    });
+    if(!response.ok)throw new Error('EXPORT_DENIED_'+response.status);
+    const blob=await response.blob(),href=URL.createObjectURL(blob);
+    const link=document.createElement('a');link.href=href;link.download='rfbticket-checkins-'+manageId+'.csv';
+    document.body.appendChild(link);link.click();link.remove();
+    window.setTimeout(()=>URL.revokeObjectURL(href),1000);
+    setMessage('CSV exportado: apenas números dos ingressos e horários de entrada.');
+  });}
   async function saveEvent(e:FormEvent) {e.preventDefault();if(!user||!manageId)return;await run(async()=>{
     await api('/api/events/'+manageId,user,'PATCH',{title:editTitle,city:editCity,
       description:editDescription,startsAt:new Date(editDate).toISOString()});
@@ -197,7 +208,10 @@ export default function LiveApp() {
         {manageDetail.staff?.map(s=><div className="live-listitem" key={s.uid}><span>UID: {s.uid} · {s.role}</span>
           <button type="button" className="live-secondary" disabled={busy} onClick={()=>revokeGate(s.uid)}>Revogar acesso</button></div>)}</>}
       {isEventOwner&&<h3>Relatório do evento</h3>}{report&&<div className="live-metrics"><div><strong>{report.stats.capacity}</strong><span>Capacidade total</span></div><div><strong>{report.stats.issued}</strong><span>Ingressos emitidos</span></div><div><strong>{report.stats.checkins}</strong><span>Entradas validadas</span></div><div><strong>{money(report.stats.sandbox_revenue_cents)}</strong><span>Faturamento simulado</span></div></div>}
-      {isEventOwner&&<button className="live-secondary" disabled={busy} onClick={()=>run(()=>reloadManaged(manageId))}>Atualizar relatório</button>}
+      {isEventOwner&&<div className="live-actions">
+        <button className="live-secondary" disabled={busy} onClick={()=>run(()=>reloadManaged(manageId))}>Atualizar relatório</button>
+        <button className="live-secondary" disabled={busy} onClick={downloadCheckins}>Exportar entradas CSV</button>
+      </div>}
       </>}
     </section></main>}
     {tab==='admin' && isAdmin && <main className="live-panel"><h2>Administração — leitura restrita</h2>
