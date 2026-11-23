@@ -117,6 +117,11 @@ test('transfer revokes old token and refund works before admission',async()=>{
  const issued=await api('/api/orders/'+another.order.id+'/sandbox-confirm','POST',{},c);
  const refunded=await api('/api/orders/'+another.order.id+'/refund','POST',{},c);
  assert.equal(refunded.httpStatus,200);assert.equal(refunded.moneyReturned,false);
+ assert.equal(refunded.capacityReleased,true);
+ const reopened=(await api('/api/events/'+eventId)).lots.find(l=>l.id===newLot.lotId);
+ assert.equal(reopened.available,1);
+ const returnedSeat=await api('/api/orders','POST',{lotId:newLot.lotId,quantity:1,requestKey:randomUUID()},b);
+ assert.equal(returnedSeat.httpStatus,201);
  assert.equal((await api('/api/checkin','POST',{eventId,token:issued.tickets[0].token,requestId:randomUUID()},gate)).error,'INVALID_TICKET');
 });
 test('checkin valid signature required, no trust to browser-provided token',async()=>{
