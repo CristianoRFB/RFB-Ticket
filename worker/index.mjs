@@ -239,8 +239,8 @@ export async function handleApi(request,env) {
       if(!await hasRole(env.DB,user.uid,eventId,['organizer','gate']))bad('NO_PERMISSION',403);
       const ticket=await env.DB.prepare('SELECT id,event_id,status,token_version FROM tickets WHERE id=?').bind(parsed.ticketId).first();
       if(!ticket||ticket.event_id!==eventId||!await validateTicketToken(p.token,ticket,env.TICKET_SIGNING_SECRET))bad('INVALID_TICKET',400);
-      const previous=await env.DB.prepare('SELECT ticket_id,request_id FROM checkins WHERE ticket_id=? OR request_id=?').bind(ticket.id,requestId).first();
-      if(previous){if(previous.ticket_id===ticket.id && previous.request_id===requestId)return ok({result:'OK',replayed:true});bad(previous.request_id===requestId?'REQUEST_ID_REUSED':'ALREADY_USED',409);}
+      const previous=await env.DB.prepare('SELECT ticket_id,request_id,fiscal_uid FROM checkins WHERE ticket_id=? OR request_id=?').bind(ticket.id,requestId).first();
+      if(previous){if(previous.ticket_id===ticket.id && previous.request_id===requestId && previous.fiscal_uid===user.uid)return ok({result:'OK',replayed:true});bad(previous.request_id===requestId?'REQUEST_ID_REUSED':'ALREADY_USED',409);}
       if(ticket.status!=='issued')bad('TICKET_NOT_VALID',409);
       const t=now();
       const sql=`INSERT OR IGNORE INTO checkins(ticket_id,event_id,fiscal_uid,request_id,created_at)

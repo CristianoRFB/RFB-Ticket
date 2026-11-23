@@ -126,4 +126,49 @@ test('checkin valid signature required, no trust to browser-provided token',asyn
  assert.equal((await api('/api/checkin','POST',{eventId,token:tampered,requestId:randomUUID()},gate)).error,'INVALID_TICKET');
  assert.equal((await api('/api/checkin','POST',{eventId,token:valid.token,requestId:randomUUID()},gate)).result,'OK');
 });
+test('two concurrent buyers cannot reserve the last seat, and cross-event role isolation holds',async()=>{
+ const anotherEvent=await api('/api/events','POST',{title:'Evento paralelo',city:'Cidade paralela',startsAt:'2027-03-20T18:00:00Z'},a);
+ const ev=anotherEvent.eventId;
+ const extraLot=await api('/api/events/'+ev+'/lots','POST',{label:'Uma vaga',capacity:1,priceCents:1234},a);
+ await api('/api/events/'+ev+'/publish','POST',{},a);
+ const [x,y]=await Promise.all([
+   api('/api/orders','POST',{lotId:extraLot.lotId,quantity:1,requestKey:randomUUID()},b),
+   api('/api/orders','POST',{lotId:extraLot.lotId,quantity:1,requestKey:randomUUID()},c),
+ ]);
+ assert.deepEqual([x.httpStatus,y.httpStatus].sort(),[201,409]);
+ const details=await api('/api/events/'+ev);
+ assert.equal(details.lots[0].available,0);
+ assert.equal(details.lots[0].reserved,1);
+ assert.equal((await api('/api/events/'+ev+'/lots','POST',{label:'Inválido',capacity:1,priceCents:0},b)).httpStatus,403);
+ assert.equal((await api('/api/events/'+ev+'/stats','GET',null,gate)).httpStatus,403);
+});
+test('expiration recovers capacity atomically and stale checkout cannot issue',async()=>{
+ const exp=await api('/api/events','POST',{title:'Teste de expiração',city:'Cidade teste',startsAt:'2027-04-14T20:00:00Z'},a);
+ const xlot=await api('/api/events/'+exp.eventId+'/lots','POST',{label:'Só uma vaga',capacity:1,priceCents:100},a);
+ await api('/api/events/'+exp.eventId+'/publish','POST',{},a);
+ const first=await api('/api/orders','POST',{lotId:xlot.lotId,quantity:1,requestKey:randomUUID()},b);
+ assert.equal(first.httpStatus,201);
+ db.prepare('UPDATE orders SET hold_expires_at=? WHERE id=?').run(1,first.order.id);
+ const next=await api('/api/orders','POST',{lotId:xlot.lotId,quantity:1,requestKey:randomUUID()},c);
+ assert.equal(next.httpStatus,201);
+ assert.equal((await api('/api/orders/'+first.order.id+'/sandbox-confirm','POST',{},b)).httpStatus,409);
+ const lot=(await api('/api/events/'+exp.eventId)).lots[0];
+ assert.equal(lot.available,0);assert.equal(lot.reserved,1);
+});
+test('independent fiscal cannot reuse another fiscal idempotency request',async()=>{
+ const staff2=token('gate-e');
+ const l=await api('/api/events/'+eventId+'/lots','POST',{label:'Checkin paralelo',capacity:1,priceCents:0},a);
+ const o=await api('/api/orders','POST',{lotId:l.lotId,quantity:1,requestKey:randomUUID()},b);
+ const issued=await api('/api/orders/'+o.order.id+'/sandbox-confirm','POST',{},b);
+ const entry=issued.tickets[0].token;
+ await api('/api/events/'+eventId+'/staff','POST',{uid:'gate-e'},a);
+ const reqId=randomUUID();
+ const first=await api('/api/checkin','POST',{eventId,token:entry,requestId:reqId},gate);
+ assert.equal(first.result,'OK');
+ const denied=await api('/api/checkin','POST',{eventId,token:entry,requestId:reqId},staff2);
+ assert.equal(denied.httpStatus,409);
+ assert.equal(denied.error,'REQUEST_ID_REUSED');
+ const repeated=await api('/api/checkin','POST',{eventId,token:entry,requestId:randomUUID()},staff2);
+ assert.equal(repeated.error,'ALREADY_USED');
+});
 after(()=>{globalThis.fetch=originalFetch;db.close();});
