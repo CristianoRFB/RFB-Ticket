@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Ícone RFBTicket">
+<title>Ícone RFBTicket</title>
+<rect width="256" height="256" rx="54" fill="#10131A"/>
+<g fill="none" stroke="#FDFDFD" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"><path d="M46 93H211V114Q196 114 196 131Q196 149 211 149V171H46V149Q61 149 61 131Q61 114 46 114Z"/><path stroke="#F9CE6B" d="M155 97V109M155 123V135M155 149V165"/><path d="M84 130L105 151L131 111"/></g>
+</svg>
