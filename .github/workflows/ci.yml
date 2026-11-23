@@ -35,6 +35,12 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      - name: Cloudflare build validation (no credentials, no deploy)
+        run: npx cf deploy --dry-run
+      - name: Local D1 migration smoke test (no remote database)
+        run: |
+          npx cf d1 migrations apply rfb-ticket-sandbox --local --dir ./migrations
+          npx cf d1 raw rfb-ticket-sandbox --local --sql "SELECT COUNT(*) AS n FROM sqlite_master WHERE name='tickets'"
   browser-demo:
     runs-on: ubuntu-latest
     permissions:
