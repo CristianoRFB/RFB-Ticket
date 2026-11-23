@@ -7,7 +7,8 @@
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:domain": "node --experimental-strip-types --test tests/ticketDomain.node-test.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
