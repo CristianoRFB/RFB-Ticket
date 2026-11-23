@@ -267,6 +267,8 @@ test('cancel event revokes all issued tickets, releases holds, and blocks new lo
  assert.equal((await api('/api/events/'+ev.eventId)).httpStatus,404);
  assert.equal((await api('/api/events/'+ev.eventId+'/cancel','POST',{},a)).httpStatus,409);
  assert.equal((await api('/api/events/'+ev.eventId+'/lots','POST',{label:'Tardio',capacity:1,priceCents:0},a)).httpStatus,409);
+ assert.equal((await api('/api/events/'+ev.eventId+'/staff','POST',{uid:'gate-x'},a)).httpStatus,409);
+ assert.equal((await api('/api/lots/'+lot.lotId,'PATCH',{status:'paused'},a)).httpStatus,409);
  const bOrders=await api('/api/orders','GET',null,b);
  assert.equal(bOrders.orders.find(x=>x.id===paid.order.id).status,'refunded');
  const cOrders=await api('/api/orders','GET',null,c);
