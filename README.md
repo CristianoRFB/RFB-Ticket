@@ -27,7 +27,7 @@ npm run build
 npm run dev
 ```
 
-**Testes realmente executados no executor local:** API SQLite nativo de Node 22 (5 cenários PASS), sintaxe de Worker e JSX via transpilação TypeScript. Build Vite, typecheck global, Playwright e execução Cloudflare real: NOT_RUN enquanto as dependências npm não forem instaladas.
+**Testes realmente executados no executor local:** API SQLite nativo de Node 22 (8 cenários PASS), sintaxe de Worker e JSX via transpilação TypeScript. Build Vite, typecheck global e Playwright da demonstração: PASS no GitHub Actions; execução de Firebase/Cloudflare reais: NOT_RUN.
 
 O modo demonstração é ativado sem Firebase. Para testar integração, configurar `.env.local` e banco isolado (ver [Deploy sandbox](docs/DEPLOY-SANDBOX.md)). Não configurar cobrança, gateway ou production account.
 
@@ -43,4 +43,4 @@ Nenhum JWT de sessão é aceito sem verificar RS256, issuer, audience e validade
 
 `.github/workflows/ci.yml` executa testes locais de API e domínio e, quando as dependências forem resolvidas, typecheck, Vitest e build. O workflow foi escrito, mas resultados remotos só podem ser relatados depois de verificar os checks da SHA real do PR.
 
-Node >=22.18 é requerido pelo Cloudflare CLI (`cf`) com configuração programática. Ambiente local do teste estava em Node 22.16, portanto os testes do servidor foram executados sem utilizar o CLI. Para backend + frontend no mesmo Worker, usar `npm run dev:sandbox` com D1 de teste configurado; `npm run dev` continua servindo Vite (integrado pelo plugin quando instalado).
+Node >=24.12 é o requisito adotado pelo projeto para o Firebase 13 atual. O CLI `cf` requer pelo menos 22.18. O ambiente local de testes da API tinha Node 22.16; GitHub Actions valida a stack com Node 24. Para backend + frontend no mesmo Worker, usar `npm run dev:sandbox` com D1 de teste configurado; `npm run dev` continua servindo Vite (integrado pelo plugin quando instalado).

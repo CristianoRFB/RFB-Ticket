@@ -11,7 +11,7 @@
 
 ## Pré-requisitos
 
-1. Node >= 22.18 e CLI `cf` disponível, dependências instaladas e build/QA aprovados.
+1. Node >= 24.12 (Firebase 13 requer Node 24.12; cf exige ao menos 22.18) e CLI `cf` disponível, dependências instaladas e build/QA aprovados.
 2. Criar projeto Firebase de teste SEM conta de produção; habilitar Email/Password apenas para contas de teste; configurar Firebase App Check quando for expor a internet.
 3. Criar banco D1 exclusivamente para sandbox, NÃO apontar para `vof-2027-staging`, `food-condado-preview` ou quaisquer outros bancos existentes.
 4. Atualizar `cloudflare.config.ts`: `DB` apontando para D1 de teste correto; `FIREBASE_PROJECT_ID` exatamente igual ao `VITE_FIREBASE_PROJECT_ID`.
@@ -32,7 +32,7 @@ npm run build
 cf deploy --dry-run
 ```
 
-**Importante:** `cf` é beta em novembro de 2026, requer Node >=22.18 e seu `cloudflare.config.ts` pode precisar ser ajustado conforme a versão instalada; nunca alegar que dry-run funciona sem tentar.
+**Importante:** `cf` é beta em novembro de 2026, exige Node >=22.18 e aqui usamos Node >=24.12 para compatibilidade Firebase e seu `cloudflare.config.ts` pode precisar ser ajustado conforme a versão instalada; nunca alegar que dry-run funciona sem tentar.
 
 ## Segurança e liberação
 

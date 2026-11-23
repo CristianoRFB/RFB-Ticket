@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Node API sandbox tests (no external services)
         run: node --experimental-sqlite --test tests/api.node-test.mjs
       - name: Domain model
@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Install dependencies from registry
         run: npm install --no-audit --no-fund
       - name: Static type check
@@ -43,7 +43,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Install browser (sandbox demo only)

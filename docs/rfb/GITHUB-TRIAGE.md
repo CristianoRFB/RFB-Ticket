@@ -1,11 +1,9 @@
-# RFBTicket — GITHUB TRIAGE, pós execução
+# GITHUB TRIAGE — RFBTicket, snapshot 2026-11-22 BRT
 
-Data da rodada: 2026-11-22 BRT; alvo público CristianoRFB/RFB-Ticket.
-Baseline main SHA dbd16775e4b4f47a855fd67a736294421ee1f6b9; última HEAD verificada antes do checkpoint d215759a1a02923b5d1b2d43d4b6544700323249.
-Branch PR #1: feature/rfb-starter-pack-v1 -> main; estado OPEN_DRAFT; merge não executado.
-Busca open is:issue = 0. Busca open is:pr = 1. Cada busca topn 100 retornou menos de 100; nenhuma paginação adicional necessária.
-PR #1 tinha 0 reviews, 0 comentários e 0 threads ao iniciar. Nenhum CI check observado na SHA baseline. Na SHA d215759a1a02923b5d1b2d43d4b6544700323249: combined statuses [] e check_runs total_count 0.
-Classificação: OPEN_ACTIONABLE / IMPLEMENTED_UNVERIFIED, mantido aberto. Não há issue independente para fechar; nenhum recurso externo alterado.
-S001 – baseline & inventário; S002 – demo local F01/F02 e plano transacional. Check-in real e verificação de duas entradas permanecem NÃO IMPLEMENTADOS.
-Permanecem abertos: build, QA navegador, concorrência, roles, Firebase Rules e validação humana; não há base para merge nem fechamento.
-Na retomada, verificar novo HEAD/checks/comentários/Issues/PRs. Registro é instantâneo da rodada, não monitoramento assíncrono.
+Repo `CristianoRFB/RFB-Ticket`, branch `feature/rfb-starter-pack-v1`, PR #1 DRAFT; main baseline `dbd16775e4b4f47a855fd67a736294421ee1f6b9`.
+
+Início do turno: 0 issues abertas, 1 PR aberto (#1), sem comentários/reviews, head `79f7d31aad37f23c028f612f4d2f37aac1121bf6`.
+
+Commits novos: `15bb5d...` backend; `6a6f56...` frontend/CI; `15d52f...` correção de replay e testes; `337001...` Playwright.
+
+Checks no commit `6a6f...`: 4 sucesso. Checks no commit `337001...`: browser + backend PASS, frontend FAIL por Vitest coletar Playwright. Correção `40737...`: 6 checks PASS (backend/frontend/browser). Não fechar nem mesclar #1: integração, segurança e QA externo incompletos. Reconsultar GitHub de novo antes da entrega final.

@@ -1,29 +1,26 @@
-# RFBTicket — PROGRESS | checkpoint pós S002
+# PROGRESS — RFBTicket / RFB Method GPT
 
-Fonte única: PROJECT_STATUS.json (raiz). Estado validado sobre PR #1 draft. Data local 2026-11-22.
+2026-11-22 BRT. Fonte canônica: `PROJECT_STATUS.json` na raiz. O último SHA analisado foi `40737f84cc23c6c0dbb355eb8e8ea75e63c3c6a1` em `feature/rfb-starter-pack-v1`, PR #1 Draft. Sempre rever HEAD no GitHub antes de editar.
 
-## S001 (triagem) — concluído como diagnóstico
-- Repositório público CristianoRFB/RFB-Ticket; main inicial dbd16775e4b4f47a855fd67a736294421ee1f6b9.
-- PR #1 draft / feature/rfb-starter-pack-v1, nenhum PR concorrente.
-- Consultas antes e depois: 0 Issues abertas, 1 PR aberto (o #1). Sem comentários, reviews, threads ou checks observados. Nenhum encerramento.
-- Starter Pack fonte, 7 diagramas e catálogo T001–T058 revisados. Lacunas documentadas em docs/DIAGRAM-AND-SCREEN-AUDIT.md.
+## S001 — inventário / segurança / contexto
+0 Issues abertas, 1 PR #1 Draft aberto, main `dbd16775...`. Metodologia, especificação de 12 features, sete diagramas e catálogo T001–T058 preservados. Nenhum PR paralelo criado. Cloudflare conta conectada: recursos existentes de **outros** projetos foram preservados. Nenhum serviço novo faturado.
 
-## S002 (F01/F02) — código demonstrativo implementado; QA completo pendente
-- Commit domínio fd549595359f792d64f12ecc35767dfdea57e442: modelos, fixtures e reserva sintética.
-- Commit frontend f45d44316004ae8be5adf37f624b8968c678dbde: catálogo, escolha de evento e lote, valor fictício, validação de estoque LOCAL e reinício.
-- Cinco testes nativos Node 22.16 PASS; TypeScript 5.8 strict isolado PASS, transpile sintático de App local PASS.
-- NÃO foram rodados npm install, typecheck completo, npm run test(Vitest), build Vite, browser/Playwright, Firestore Emulator ou CI.
-- ATENÇÃO: simulação local não garante estoque nem autorização real; todos AC-01..AC-12 ainda pendentes de aceite completo.
-- Docs de arquitetura, mercado e segurança: docs/TRANSACTIONAL-CHECKIN-PLAN.md e docs/MARKET-AND-UX-RESEARCH.md.
-- Não há checkout real, QR, pagamento, emissão, permissão inter-tenant servidor, webhook ou check-in atômico.
+## S002 — API transacional sandbox e frontend, IMPLEMENTADO_NÃO_HOMOLOGADO
+- `15bb5d0883354595e78cb47b640137446c6f38a0`: worker API, HMAC, Firebase ID token, D1 schema e cinco testes SQLite.
+- `6a6f5612f1ba206ad1457c3fa9d429aa1546e2ab`: React real/sandbox + UI demo, autenticacao cliente, scanner QR, relatórios, integração do Vite Cloudflare, CI GitHub.
+- `15d52fd20a413a58e2228f76b756ad4afdaa6fb9`: replay de check-in restrito ao mesmo fiscal e testes de corrida, expiração e tenant; Node SQLite PASS 8/8.
+- `337001841caa06d5c574f72ded6d709bd9190fad`: suíte Playwright para demonstração sintética desktop/mobile/teclado, testes browser aprovados: seis testes em Chromium desktop e mobile.
+- CI commit `6a6f...`: 4/4 checks PASS (frontend install/typecheck/Vitest/build; backend tests). CI `337001...`: backend e browser PASS; frontend FAIL por Vitest incluir Playwright. Correção `40737...`: Vitest separado de Playwright; GitHub CI 6/6 PASS.
 
-## S003/S004 — próxima fatia objetiva
-1. Em checkout real conectado, npm install, test:domain, typecheck, test, build; corrigir bugs com anti-loop.
-2. QA manual/Playwright de Eventos e Lotes com teclado, reduced-motion, tamanhos mobile e desktop, capturas reais.
-3. Escolher modelo de dados/roles validado em Firestore Emulator; implementar transação de hold por lote e teste concorrente da última vaga.
-4. Depois, check-in com QR opaco e primeira validação única transacional, teste duas portas e novo requestId. Nada de produção sem autorização.
+## S003 — lacunas críticas antes de qualquer 90% real
+Matriz detalhada: `docs/ACCEPTANCE-MATRIX.md`. Sem Firebase Authentication configurado nem D1 com Worker real isolado, não houve autenticação E2E, teste D1 concorrente, fila com câmera ou publicação. Sandbox de compra não tem webhook assinado; reembolso não movimenta dinheiro. Build/testes de código aprovados não provam produção.
 
-## Custos e gates
-R$0 em novos recursos criados; Firebase/Cloudflare não conectados nem implantados. Preços e limites Free consultados em documentação oficial em 22/11; plano efetivo de cada conta: NÃO VERIFICADO. PR segue draft e NÃO deve sofrer merge.
+## Gate de segurança / custo
+Nenhuma credencial, PII real, conta de cobrança, deploy ou merge. D1 Free e Workers Free confirmados na documentação, limite do plano específico do usuário e Firebase Spark permanecem NÃO_VERIFICADOS. Não criar R2, domínios próprios ou gateway real. UI e API são protótipos sandbox com bloqueio de produção.
 
-Rollback: reverter commits da branch draft. Nunca forçar main nem editar o método-mãe/myown automaticamente.
+## Retomada concreta
+1. Buscar CI da atualização Node 24 após este checkpoint; ler logs de falhas e corrigir com teste direcionado.
+2. Fazer QA de navegador em viewport 390/1440 e E2E autenticado **somente** com Firebase/D1 isolados.
+3. Implementar F03 numeração, F05 gateway webhook exclusivamente sandbox se credenciais seguras e ambiente forem disponibilizados.
+4. Auditar AV-03, AV-08, AV-14, rate-limit, check-in e testes de duas portas reais; depois imagens/assets e 58 T-IDs priorizados.
+5. Publicar checkpoint novo, nunca dar merge/deploy sem gates.
