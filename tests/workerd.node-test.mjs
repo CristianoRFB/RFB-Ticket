@@ -196,3 +196,17 @@ test('workerd D1: sandbox refund revokes ticket and returns inventory exactly on
   assert.equal(repurchased.status,201);
   assert.equal((await request('/api/events/'+ev)).lots[0].available,0);
 });
+
+test('workerd D1: CSV report is allowed only for the event owner',async()=>{
+  const checked=await db.prepare('SELECT event_id FROM checkins LIMIT 1').first();
+  assert.ok(checked?.event_id);
+  const url='https://local.test/api/events/'+checked.event_id+'/checkins.csv';
+  const allowed=await mf.dispatchFetch(url,{headers:{Authorization:'Bearer '+organizer}});
+  assert.equal(allowed.status,200);
+  assert.match(allowed.headers.get('content-type')||'',/text\/csv/);
+  const text=await allowed.text();
+  assert.ok(text.startsWith('\uFEFFnumero_ingresso,data_checkin_utc'));
+  assert.ok(!text.includes('buyer-workerd')&&!text.includes('gate-workerd'));
+  const outsider=await mf.dispatchFetch(url,{headers:{Authorization:'Bearer '+buyerA}});
+  assert.equal(outsider.status,403);
+});
