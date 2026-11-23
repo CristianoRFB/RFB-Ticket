@@ -1,41 +1,46 @@
-# RFBTicket — RFB Labs
+# RFBTicket — da venda ao check-in sem filas
 
-> **Demonstração de eventos e lotes com dados sintéticos; NÃO é bilheteria real.** PR #1 draft, não publicado. Não há backend, login, pagamento, checkout, QR antifraude ou check-in real.
+**Status: PR DRAFT / sandbox técnico local. Não é bilheteria em produção.**
 
-**Slogan:** Da venda ao check-in sem filas.
+Sistema de ingressos experimentais para eventos, com React/Vite, identidade Firebase, Cloudflare Worker e D1 transacional. Possui demonstração local sem backend e um modo sandbox autenticado que depende de infraestrutura de teste ainda NÃO provisionada. Nenhuma venda ou reembolso real.
 
-## Escopo presente no PR draft
+## Módulos implementados em código (não homologados)
 
-- Catálogo local de dois eventos fictícios; seleção e detalhes.
-- Lotes com capacidade/ocupação exemplificativas, indisponibilidade, quantidade 1–4 e preços fictícios.
-- Simulação de reserva apenas em memória, sem validade fora da aba. Nenhum estoque real é bloqueado.
-- Lógica de domínio F01/F02 com cinco testes negativos/positivos executados localmente em Node 22.
-- Matriz de requisitos, 58 telas previstas, sete diagramas iniciais e plano de check-in transacional, todos sem backend aprovado.
+- Eventos: catálogo público, detalhes, criação em rascunho e publicação pelo dono do evento.
+- Lotes: capacidade, status de pausa e catálogo de preços fictícios; saldo computado em servidor.
+- Pedidos: reserva atômica de 10 min, idempotência por comprador e liberação sob expiração por consulta; não há job automático de expiração.
+- Checkout: aprovação *fake sandbox* por comprador, nunca webhook financeiro real.
+- Ingressos: emissão HMAC verificável, QR SVG (frontend), visualização privada e transferência uma vez com revogação de QR anterior.
+- Portaria: QR por câmera quando suportado, fallback manual, fiscal autorizado por evento e uso único com UNIQUE em D1.
+- Relatórios: capacidade, ingressos emitidos, check-ins e receita fictícia; trilha simples de auditoria.
+- Reembolso: operação interna fictícia, bloqueia após check-in/transferência, não devolve dinheiro.
 
-## Executar localmente
+## Rodar localmente
 
-Requer Node.js compatível, npm e acesso às dependências do package.json. Os comandos abaixo NÃO foram executados integralmente nesta sessão por indisponibilidade de instalação:
-
-~~~sh
+```sh
 npm install
 npm run test:domain
+npm run test:api
 npm run typecheck
 npm run test
 npm run build
 npm run dev
-~~~
+```
 
-Apenas o teste nativo do domínio (5/5) e typecheck de arquivos de domínio isolados foram efetivamente executados com ferramentas instaladas, sem executar Vite/React. Ver docs/QA-REPORT-2026-11-22.md.
+**Testes realmente executados no executor local:** API SQLite nativo de Node 22 (5 cenários PASS), sintaxe de Worker e JSX via transpilação TypeScript. Build Vite, typecheck global, Playwright e execução Cloudflare real: NOT_RUN enquanto as dependências npm não forem instaladas.
 
-## Documentação
+O modo demonstração é ativado sem Firebase. Para testar integração, configurar `.env.local` e banco isolado (ver [Deploy sandbox](docs/DEPLOY-SANDBOX.md)). Não configurar cobrança, gateway ou production account.
 
-- [Especificação original](docs/ESPECIFICACAO-RFB.txt)
-- [Starter Pack](docs/STARTER-PACK.md) — blueprint histórico, pode conter status antigo
-- [Diagramas](docs/DIAGRAMAS.md) — sete propostas editáveis
-- [UX e catálogo de 58 telas](docs/UX-DESIGN-AND-QA.md)
-- [Roadmap histórico](docs/ROADMAP.md)
-- [Arquitetura transacional proposta](docs/TRANSACTIONAL-CHECKIN-PLAN.md)
-- [QA executado e pendente](docs/QA-REPORT-2026-11-22.md)
-- [Estado canônico](PROJECT_STATUS.json), [progresso](docs/rfb/PROGRESS.md), [handoff](docs/HANDOFF.md)
+## Segurança
 
-Meta de custo recorrente adicional R$0 dentro de limites gratuitos e sem cobrança autorizada; taxas por venda e serviços externos não estão incluídos. Firebase/Cloudflare permanecem NÃO CONECTADOS/NÃO IMPLANTADOS.
+Nenhum JWT de sessão é aceito sem verificar RS256, issuer, audience e validade. A API protege objetos por uid/evento e os QR por HMAC com segredo exclusivo do Worker. Segredos e tokens pessoais não devem entrar no Git. Firebase Auth e infra REAL ainda não foram testados nem homologados. Falta rate limiting e auditoria independente; não lançar publicamente.
+
+## Rastreamento
+
+[Requisitos originais](docs/ESPECIFICACAO-RFB.txt) · [Starter Pack](docs/STARTER-PACK.md) · [Roteiro](docs/ROADMAP.md) · [Dados e checks](docs/ADR-002-D1-TRANSACTIONS.md) · [QA](docs/QA-REPORT-2026-11-22-S002.md) · [Checkpoint](PROJECT_STATUS.json)
+
+## CI proposta
+
+`.github/workflows/ci.yml` executa testes locais de API e domínio e, quando as dependências forem resolvidas, typecheck, Vitest e build. O workflow foi escrito, mas resultados remotos só podem ser relatados depois de verificar os checks da SHA real do PR.
+
+Node >=22.18 é requerido pelo Cloudflare CLI (`cf`) com configuração programática. Ambiente local do teste estava em Node 22.16, portanto os testes do servidor foram executados sem utilizar o CLI. Para backend + frontend no mesmo Worker, usar `npm run dev:sandbox` com D1 de teste configurado; `npm run dev` continua servindo Vite (integrado pelo plugin quando instalado).

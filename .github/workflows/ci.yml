@@ -1,0 +1,37 @@
+name: RFBTicket verification
+on:
+  pull_request:
+  push:
+    branches:
+      - feature/rfb-starter-pack-v1
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Node API sandbox tests (no external services)
+        run: node --experimental-sqlite --test tests/api.node-test.mjs
+      - name: Domain model
+        run: node --experimental-strip-types --test tests/ticketDomain.node-test.mjs
+  frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies from registry
+        run: npm install --no-audit --no-fund
+      - name: Static type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
