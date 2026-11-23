@@ -35,3 +35,25 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+  browser-demo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install browser (sandbox demo only)
+        run: npx playwright install --with-deps chromium
+      - name: Real browser QA (synthetic demo only)
+        run: npm run test:e2e
+      - name: Retain failure artifacts (synthetic fixtures)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-browser-failures
+          path: test-results/
+          retention-days: 3
