@@ -3,7 +3,7 @@ import type { User } from 'firebase/auth';
 export interface TicketEvent { id: string; title: string; description: string; city: string; starts_at: string; status: string; organizer_uid?: string; }
 export interface Lot { id: string; event_id?: string; label: string; capacity: number; reserved: number; issued: number; price_cents: number; status: string; available: number; }
 export interface Order { id: string; event_id: string; lot_id: string; status: string; quantity: number; amount_cents: number; hold_expires_at: number; }
-export interface Ticket { id: string; event_id: string; order_id?: string; status: string; token_version: number; token: string|null; used_at?: number|null; }
+export interface Ticket { ticket_number: number; id: string; event_id: string; order_id?: string; status: string; token_version: number; token: string|null; used_at?: number|null; }
 export interface EventDetail {event: TicketEvent; lots: Lot[]; staff?: Array<{uid:string;role:string}>;}
 export interface EventStats {capacity:number;issued:number;checkins:number;sandbox_revenue_cents:number;}
 export type ApiReply<T> = T & {error?: string};

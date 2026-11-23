@@ -219,7 +219,7 @@ export async function handleApi(request,env) {
       }
     }
     if(method==='GET' && path==='/api/tickets') {
-      const rows=await env.DB.prepare("SELECT t.id,t.event_id,t.order_id,t.status,t.token_version,t.used_at,t.created_at FROM tickets t WHERE t.owner_uid=? ORDER BY t.created_at DESC LIMIT 100").bind(user.uid).all();
+      const rows=await env.DB.prepare("SELECT t.ticket_number,t.id,t.event_id,t.order_id,t.status,t.token_version,t.used_at,t.created_at FROM tickets t WHERE t.owner_uid=? ORDER BY t.created_at DESC LIMIT 100").bind(user.uid).all();
       return ok({tickets:await Promise.all((rows.results||[]).map(async t=>({...t,token:t.status==='issued'?await createTicketToken(t.id,t.token_version,env.TICKET_SIGNING_SECRET):null})))});
     }
     const transfer=/^\/api\/tickets\/([^/]+)\/transfer$/.exec(path);
@@ -259,7 +259,7 @@ export async function handleApi(request,env) {
   } catch(error) {return safeError(error);}
 }
 async function getTicketsForOrder(env,orderId,uid) {
-  const rows=await env.DB.prepare('SELECT id,event_id,token_version,status FROM tickets WHERE order_id=? AND owner_uid=? ORDER BY created_at').bind(orderId,uid).all();
+  const rows=await env.DB.prepare('SELECT ticket_number,id,event_id,token_version,status FROM tickets WHERE order_id=? AND owner_uid=? ORDER BY created_at').bind(orderId,uid).all();
   return Promise.all((rows.results||[]).map(async t=>({...t,token: t.status==='issued'?await createTicketToken(t.id,t.token_version,env.TICKET_SIGNING_SECRET):null})));
 }
 export default {

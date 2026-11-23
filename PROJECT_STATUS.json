@@ -13,7 +13,6 @@
   "verified_completion_percent": null,
   "features_code": "F01/F02/F04_fake/F06/F07/F08/F09/F10_fake/F11/F12 partial; see docs/ACCEPTANCE-MATRIX.md",
   "major_missing": [
-    "F03 human-visible numbered ticket scheme",
     "F05 verified payment provider sandbox webhook",
     "Cloudflare D1 integration test with actual binding",
     "Firebase project/auth configuration and cross-tenant live testing",
@@ -23,7 +22,7 @@
     "Mobile physical-device camera permission and poor-network QA not executed"
   ],
   "tests": {
-    "local_backend_node_sqlite": "PASS_8_OF_8",
+    "local_backend_node_sqlite": "PASS_9_OF_9",
     "local_domain": "PASS_5_OF_5",
     "github_ci_prior_commit_6a6f": "PASS_4_OF_4",
     "github_backend_3370": "PASS_2_OF_2",
@@ -33,7 +32,7 @@
     "live_firebase": "NOT_RUN",
     "payments": "FAKE_ONLY",
     "github_ci_40737": "PASS_6_OF_6",
-    "github_ci_post_node24": "PENDING_RUN"
+    "github_ci_post_node24": "BACKEND_FRONTEND_PASS_BROWSER_PENDING_ON_PREVIOUS_D6CD_HEAD"
   },
   "cloudflare": {
     "account_read_only_audited": true,
@@ -49,5 +48,10 @@
   "production": false,
   "no_merge": true,
   "no_billing": true,
-  "next_action": "Verify Node24 CI on new checkpoint, then isolated D1/Firebase E2E; review F03/F05 gap and security controls before deploy."
+  "next_action": "Check GitHub CI for F03 and Node24, then configure isolated D1/Firebase staging without changing other projects; execute actual auth/atomic checkin concurrency and camera QA.",
+  "scope_details": {
+    "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
+    "F05_webhook": "NOT_IMPLEMENTED",
+    "API_routes": "SANDBOX_ONLY"
+  }
 }

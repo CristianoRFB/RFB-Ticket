@@ -21,6 +21,11 @@ Nenhuma credencial, PII real, conta de cobrança, deploy ou merge. D1 Free e Wor
 ## Retomada concreta
 1. Buscar CI da atualização Node 24 após este checkpoint; ler logs de falhas e corrigir com teste direcionado.
 2. Fazer QA de navegador em viewport 390/1440 e E2E autenticado **somente** com Firebase/D1 isolados.
-3. Implementar F03 numeração, F05 gateway webhook exclusivamente sandbox se credenciais seguras e ambiente forem disponibilizados.
+3. Implementar F05 gateway webhook (F03 sequencial implementado em código, pendente D1 real) exclusivamente sandbox se credenciais seguras e ambiente forem disponibilizados.
 4. Auditar AV-03, AV-08, AV-14, rate-limit, check-in e testes de duas portas reais; depois imagens/assets e 58 T-IDs priorizados.
 5. Publicar checkpoint novo, nunca dar merge/deploy sem gates.
+
+## S004 — F03 numeração global auditável (ainda em revisão)
+- Migracao 0001 revisada para ticket_number INTEGER PRIMARY KEY AUTOINCREMENT; id QR continua UUID UNIQUE.
+- Rotas /api/tickets e emission retornam ticket_number, UI mostra #000001 etc. Node SQLite PASS 9/9.
+- Somente banco novo vazio; não rodar migração sobre banco existente sem plano/backup.

@@ -13,3 +13,6 @@ Implementado em código: eventos/lotes, reserva SQL transacional, buyer idempote
 **Ações seguras a seguir:** pesquisar checks/status GitHub no HEAD, corrigir browser CI se falhar, testar no emulador ou staging isolado autorizado, preencher F03/F05 e gates de segurança, atualizar `PROJECT_STATUS.json` e o PR. Não editar `rfb-method-gpt/myown`. Não realizar deploy/merge automaticamente.
 
 **Rollback:** reverter as fatias da branch Draft, preservando `main` e banco de outros projetos.
+
+## F03 numeração (novo slice)
+- Tickets: ticket_number autoincremental global e UUID único para QR, números exibidos na UI. Node SQLite 9/9 PASS, CI no commit futuro ainda verificar. Schema 0001 destina-se a DB novo; NÃO migrar banco de produção.

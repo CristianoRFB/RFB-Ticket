@@ -82,7 +82,7 @@ test('inventory no-oversell, idempotency key and sandbox issue',async()=>{
  assert.equal((await api('/api/orders/'+orderId+'/sandbox-confirm','POST',{},c)).httpStatus,404);
  const payment=await api('/api/orders/'+orderId+'/sandbox-confirm','POST',{},b);
  assert.equal(payment.httpStatus,200);assert.equal(payment.sandbox,true);
- assert.equal(payment.tickets.length,1);ticket=payment.tickets[0];assert.match(ticket.token,/^[a-f0-9-]+\.1\.[A-Za-z0-9_-]+$/);
+ assert.equal(payment.tickets.length,1);ticket=payment.tickets[0];assert.ok(Number.isSafeInteger(ticket.ticket_number) && ticket.ticket_number>0);assert.match(ticket.token,/^[a-f0-9-]+\.1\.[A-Za-z0-9_-]+$/);
  assert.equal((await api('/api/orders/'+orderId+'/sandbox-confirm','POST',{},b)).replayed,true);
  assert.equal((await api('/api/events/'+eventId)).lots[0].available,0);
 });
@@ -170,5 +170,14 @@ test('independent fiscal cannot reuse another fiscal idempotency request',async(
  assert.equal(denied.error,'REQUEST_ID_REUSED');
  const repeated=await api('/api/checkin','POST',{eventId,token:entry,requestId:randomUUID()},staff2);
  assert.equal(repeated.error,'ALREADY_USED');
+});
+test('F03 ticket numbers are stable, positive and unique globally without being authentication tokens',async()=>{
+ const ticketRows=db.prepare('SELECT ticket_number,id FROM tickets ORDER BY ticket_number').all();
+ assert.ok(ticketRows.length>=3);
+ assert.equal(new Set(ticketRows.map(row=>row.ticket_number)).size,ticketRows.length);
+ assert.ok(ticketRows.every(row=>Number.isSafeInteger(row.ticket_number) && row.ticket_number>0));
+ const owned=(await api('/api/tickets','GET',null,c)).tickets;
+ assert.ok(owned.every(t=>Number.isSafeInteger(t.ticket_number)));
+ assert.ok(owned.every(t=>!String(t.token || '').startsWith(String(t.ticket_number))));
 });
 after(()=>{globalThis.fetch=originalFetch;db.close();});

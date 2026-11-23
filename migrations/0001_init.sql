@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS orders (
  UNIQUE(buyer_uid, request_key)
 );
 CREATE TABLE IF NOT EXISTS tickets (
- id TEXT PRIMARY KEY, order_id TEXT NOT NULL REFERENCES orders(id),
+ ticket_number INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, order_id TEXT NOT NULL REFERENCES orders(id),
  event_id TEXT NOT NULL REFERENCES events(id), owner_uid TEXT NOT NULL,
  status TEXT NOT NULL DEFAULT 'issued' CHECK(status IN ('issued','used','revoked')),
  token_version INTEGER NOT NULL DEFAULT 1 CHECK(token_version >= 1),
