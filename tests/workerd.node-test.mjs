@@ -205,7 +205,8 @@ test('workerd D1: CSV report is allowed only for the event owner',async()=>{
   assert.equal(allowed.status,200);
   assert.match(allowed.headers.get('content-type')||'',/text\/csv/);
   const text=await allowed.text();
-  assert.ok(text.startsWith('\uFEFFnumero_ingresso,data_checkin_utc'));
+  // Response.text() may remove a UTF-8 BOM; validate the actual CSV header.
+  assert.ok(text.replace(/^\uFEFF/,'').startsWith('numero_ingresso,data_checkin_utc'));
   assert.ok(!text.includes('buyer-workerd')&&!text.includes('gate-workerd'));
   const outsider=await mf.dispatchFetch(url,{headers:{Authorization:'Bearer '+buyerA}});
   assert.equal(outsider.status,403);
