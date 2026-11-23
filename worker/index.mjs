@@ -137,7 +137,8 @@ export async function handleApi(request,env) {
       await requireRole(env.DB,user.uid,existing.event_id);
       const p=await body(request),status=p.status;
       if(status!=='available' && status!=='paused')bad('INVALID_INPUT');
-      const result=await env.DB.prepare('UPDATE lots SET status=? WHERE id=?').bind(status,lotId).run();
+      const result=await env.DB.prepare(`UPDATE lots SET status=? WHERE id=?
+        AND EXISTS(SELECT 1 FROM events WHERE id=lots.event_id AND status IN ('draft','published'))`).bind(status,lotId).run();
       if(!result.meta?.changes)bad('NOT_FOUND',404);
       await audit(env.DB,existing.event_id,user.uid,'LOT_STATUS_UPDATED',lotId);
       return ok({status});
@@ -211,7 +212,10 @@ export async function handleApi(request,env) {
         await requireRole(env.DB,user.uid,eventId);
         const p=await body(request),uid=str(p.uid,128);
         if(uid===user.uid)bad('CANNOT_ASSIGN_SELF');
-        await env.DB.prepare("INSERT INTO event_staff(event_id,uid,role) VALUES(?,?,'gate') ON CONFLICT(event_id,uid) DO UPDATE SET role='gate'").bind(eventId,uid).run();
+        const updated=await env.DB.prepare(`INSERT INTO event_staff(event_id,uid,role)
+          SELECT ?,?,'gate' FROM events WHERE id=? AND status IN ('draft','published')
+          ON CONFLICT(event_id,uid) DO UPDATE SET role='gate'`).bind(eventId,uid,eventId).run();
+        if(!updated.meta?.changes)bad('INVALID_EVENT_STATE',409);
         await audit(env.DB,eventId,user.uid,'GATE_ASSIGNED',uid);
         return ok({uid,role:'gate'});
       }
