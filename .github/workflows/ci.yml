@@ -37,10 +37,12 @@ jobs:
         run: npm run build
       - name: Cloudflare build validation (no credentials, no deploy)
         run: npx cf deploy --dry-run
-      - name: Local D1 migration smoke test (no remote database)
+      - name: Local D1 migration smoke test (never accesses remote databases)
         run: |
-          npx cf d1 migrations apply rfb-ticket-sandbox --local --dir ./migrations
-          npx cf d1 raw rfb-ticket-sandbox --local --sql "SELECT COUNT(*) AS n FROM sqlite_master WHERE name='tickets'"
+          # cf v1 takes a database UUID even in --local mode; this ID is synthetic.
+          LOCAL_DB_ID="00000000-0000-4000-8000-000000000001"
+          npx cf d1 migrations apply "$LOCAL_DB_ID" --local --dir ./migrations
+          npx cf d1 raw "$LOCAL_DB_ID" --local --sql "SELECT COUNT(*) AS n FROM sqlite_master WHERE name='tickets'"
   browser-demo:
     runs-on: ubuntu-latest
     permissions:
