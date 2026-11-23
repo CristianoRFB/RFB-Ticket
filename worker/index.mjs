@@ -139,7 +139,7 @@ export async function handleApi(request,env) {
       if(status!=='available' && status!=='paused')bad('INVALID_INPUT');
       const result=await env.DB.prepare(`UPDATE lots SET status=? WHERE id=?
         AND EXISTS(SELECT 1 FROM events WHERE id=lots.event_id AND status IN ('draft','published'))`).bind(status,lotId).run();
-      if(!result.meta?.changes)bad('NOT_FOUND',404);
+      if(!result.meta?.changes)bad('INVALID_EVENT_STATE',409);
       await audit(env.DB,existing.event_id,user.uid,'LOT_STATUS_UPDATED',lotId);
       return ok({status});
     }
