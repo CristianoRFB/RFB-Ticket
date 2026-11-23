@@ -28,3 +28,18 @@ Implementado em código: eventos/lotes, reserva SQL transacional, buyer idempote
 - HEAD de código confirmado: `ade0bc31b9273ff284298dc14b4869b2364a79dd`, PR #1 DRAFT, main intacta. GitHub CI 6/6 PASS neste SHA (backend, frontend, browser).
 - Backend Node SQLite 11/11 PASS, domínio 5/5 PASS, Playwright demo 6/6 PASS. Segurança de produção NÃO homologada.
 - Próximo passo autônomo seguro é reconciliar novos PRs/Issues, verificar checkout e código, depois preparar D1 + Firebase **isolados** somente após validar custos e autorização. Executar testes reais de corrida em portaria e checkout, testar mobile com câmera e análise de negação entre organizações; fechar F05 com gateway sandbox real antes de falar em 90%.
+
+
+## STATUS CANÔNICO ATUALIZADO — 2026-11-23 BRT / S008
+
+**Leia este bloco antes das notas históricas acima.** Último código validado 0727d5100b4d95c2fb5fe726af6df0d128cf7070, CI 45178640841 SUCCESS (4 jobs). Branch `feature/rfb-starter-pack-v1`, PR #1 Draft, main intacta. Verifique SHA e checks antes de editar.
+
+G3 local Workerd+D1: 8/8 PASS, API SQLite 17/17, domínio 5/5, Vite/TS/Vitest build PASS, Playwright demo 6/6, cf deploy dry-run PASS, D1 local migration PASS. Valida JWT assinatura RS256 em JWKS falso isolado. A API continua sandbox e possui fake checkout, sem gateway real. 58 telas/documentação e 7 diagramas permanecem parciais.
+
+Novos recursos: consulta de estoque sem holds expirados, limite de 5 holds simultâneos por UID, cancelamento evento sem checkin, revogação de fiscais, reembolso fake que devolve vaga, CSV de entradas do organizador sem identificadores privados, edição de evento na UI. Ver `docs/ACCEPTANCE-MATRIX.md`.
+
+**Bloqueios externos/produção:** Firebase test project e D1 remoto exclusivos não configurados; pagamentos reais não permitidos; câmera física, isolamento remote, storage quota/billing, anti-bot, retenção LGPD, DR, F01–F12 acceptance, T001–T058 faltam homologação. Não confundir JWTs sintéticos com contas reais Firebase nem cf dry-run com deploy.
+
+**Próxima fatia concreta:** inventariar quotas/ambiente Firebase e Cloudflare; criar apenas sandbox isolado aprovado sem cobrança; rodar auth Firebase real, transações D1 remotas com concorrência em dois dispositivos, checkin e camera; ensaiar export/import/recovery antes de liberar público pagante.
+
+**Rollback:** PR #1 Draft não mesclado; main inalterada. Reverter SHA de alterações em branch sem afetar recursos terceiros.

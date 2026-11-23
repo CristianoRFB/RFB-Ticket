@@ -45,3 +45,14 @@ Nenhum JWT de sessão é aceito sem verificar RS256, issuer, audience e validade
 `.github/workflows/ci.yml` executa testes locais de API e domínio e, quando as dependências forem resolvidas, typecheck, Vitest e build. O workflow foi escrito, mas resultados remotos só podem ser relatados depois de verificar os checks da SHA real do PR.
 
 Node >=24.12 é o requisito adotado pelo projeto para o Firebase 13 atual. O CLI `cf` requer pelo menos 22.18. O ambiente local de testes da API tinha Node 22.16; GitHub Actions valida a stack com Node 24. Para backend + frontend no mesmo Worker, usar `npm run dev:sandbox` com D1 de teste configurado; `npm run dev` continua servindo Vite (integrado pelo plugin quando instalado).
+
+
+## Atualização S008 (23/11/2026)
+
+A branch Draft agora possui controle de expiração de reservas, limite atômico de cinco holds por UID, revogação de fiscais, edição de evento, cancelamento de evento sem checkins, refund fake devolvendo capacidade, relatórios CSV sem PII e scanner que mantém a câmera aberta após recusa.
+
+**CI validada:** 17 testes API SQLite, 8 Workerd + D1 local (incluindo corrida de checkout/check-in), 5 testes domínio, 2 Vitest, 6 Playwright (demo); typecheck/build e `cf deploy --dry-run` PASS. [Run 45178640841](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45178640841).
+
+`npm run test:workerd` verifica o Worker e D1 em ambiente local isolado com Firebase JWTs de teste assinados. **Não** prova Firebase, D1 ou pagamentos reais. Leia [Matriz de aceite](docs/ACCEPTANCE-MATRIX.md), [QA S008](docs/QA-REPORT-2026-11-23-S008.md) e [checkpoint](PROJECT_STATUS.json).
+
+**Sem deploy, merge, cobrança ou criação de recursos persistentes.**

@@ -13,3 +13,12 @@ Checks no commit `6a6f...`: 4 sucesso. Checks no commit `337001...`: browser + b
 - Issues abertas=0, PRs abertos=1. Nenhum encerramento nem novo PR.
 - Checks no commit `ade0bc...`: 6/6 PASS (2 backend, 2 frontend, 2 browser), URL https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45095903916
 - F01..F12 ainda não aceitos integralmente; staging Firebase/D1 real não existe. Não fechar PR.
+
+
+## Verificação S008 — 2026-11-23 BRT
+
+HEAD `0727d5100b4d95c2fb5fe726af6df0d128cf7070`; PR #1 continua aberto DRAFT, nenhum merge. `main` base `dbd16775e4b4f47a855fd67a736294421ee1f6b9`. Issues=0, PRs=1, reviews=0, comentários=0. GitHub Actions https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45178640841: backend/frontend/browser-demo/edge-d1-integration 4 jobs SUCCESS.
+
+Consolidação de S008 está neste checkpoint; commits relevantes: `649c3ab` estoque/cancelamento, `b098fa1` UI, `7987086` D1 concurrency, `9d9032d` webhook/tenant Workerd, `f35d1d7` refund release, `a62af7f` CSV Workerd, `4d19e38` limite holds, `0727d51` testes limite concorrente.
+
+**Não fechar/mesclar PR:** gate remoto Firebase/D1, parceiro de pagamentos sandbox, privacidade/backup, câmera/aparelhos e AC ainda não homologados.

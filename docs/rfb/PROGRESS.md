@@ -43,3 +43,25 @@ Nenhuma credencial, PII real, conta de cobrança, deploy ou merge. D1 Free e Wor
 - Último HEAD de código verificado `ade0bc31b9273ff284298dc14b4869b2364a79dd`. F05 fake webhook, F03 numeração, admin read-only e 11 testes Node SQLite.
 - Todas as seis verificações GitHub CI para este commit PASS, inclusive build TS/Vite, unit, backend e 6 browser E2E da demonstração (3 cenários nos 2 viewports).
 - Sem D1 real nem Firebase configurado, sem operador/telefone para validar portaria e sem provedor financeiro sandbox; nada publicado/mesclado. Meta 90% NÃO COMPROVADA.
+
+
+## S008 — 2026-11-23 BRT: Workerd D1 + segurança + operação
+
+**HEAD de código verificado:** `0727d5100b4d95c2fb5fe726af6df0d128cf7070`. CI: https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45178640841 — quatro jobs **SUCCESS** (backend, frontend, browser-demo, edge-d1-integration). Na CI foram 17/17 testes API SQLite, 5/5 domínio, 8/8 Miniflare/Workerd+D1, 2 Vitest frontend e 6 Playwright Chromium (somente demo).
+
+Mudanças reais desta rodada:
+- Reconciliação de reservas expiradas no catálogo e pedidos, sem gravar em consultas; SQL continua varrendo reservas durante writes.
+- Revogação de fiscal por organizador, protegida por evento e testada contra usuário alheio.
+- Cancelamento transacional de evento fictício, impedido se já houve check-in; tickets revogados e reservas canceladas. Nenhum reembolso financeiro real.
+- Reembolso sandbox devolve capacidade ao lote em lote SQL atômico; QR revogado e segundo reembolso bloqueado.
+- Staff/lotes não podem ser adicionados ou alterados após cancelamento.
+- Limite atômico de cinco reservas ativas por UID com HTTP 429, para atenuar retenção de inventário.
+- Exportação de check-ins CSV restrita ao dono, números de ingresso + timestamps UTC, sem PII/QR; 5000 linhas no máximo.
+- UI: editar evento, suspender/reativar lote, revogar fiscais, cancelar com confirmação, exportar relatório, scanner não fecha após erro.
+- Miniflare workerd usa JWTs assinados com chave de teste e Google JWKS simulado, D1 local real; teste inclui concorrência de última vaga e check-in único, fake webhook HMAC, isolamento entre tenants, reembolso, CSV e antiabuso. Isso não testa recursos remotos de clientes.
+
+**Gates:** G0 inventário PASS; G1 arquitetura parcial; G2 código sandbox + testes PASS; G3 CI Node24 PASS; G4 remoto/backup/pagamento/câmera BLOCKED; G5 não aplicável: nada implantado. F01–F12 continuam sem aceite integral, sem porcentagem homologada. Worker dry-run e migração D1 local aprovados, nenhum deploy.
+
+**Custo:** zero recursos persistentes de RFB-Ticket ou serviços faturáveis criados. Banco D1 e Workers de outros projetos foram preservados. Metas Free continuam condicionadas ao plano real e quotas verificadas.
+
+**Next:** projeto Firebase isolado, D1 RFB-Ticket staging, auth E2E e corrida remota, dois aparelhos + câmera, provider sandbox real, backup/restore/LGPD; depois revisão humana, prod approval e merge.

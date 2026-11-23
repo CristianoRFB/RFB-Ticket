@@ -43,3 +43,24 @@ cf deploy --dry-run
 - Rollback do Worker não reverte dados D1; antes de publicar preparar backup/restore e verificar a restauração no sandbox.
 
 Referências oficiais: https://developers.cloudflare.com/cf/get-started/first-worker/ ; https://developers.cloudflare.com/cf/projects/cloudflare-config/ ; https://developers.cloudflare.com/d1/worker-api/d1-database/#batch ; https://firebase.google.com/docs/auth/admin/verify-id-tokens
+
+
+## Validação reforçada S008 (2026-11-23)
+
+A CI já executa `npm run test:workerd` com **Miniflare Workerd e D1 local** (sem projeto remoto). Também executa `npx cf deploy --dry-run` (sem deploy).
+
+**Observação cf v1:** `cf d1 migrations apply` exige UUID de banco, não nome/binding. O CI usa UUID sintético `00000000-0000-4000-8000-000000000001` **apenas** com `--local`; não reutilizar esse UUID no remoto. Nunca apontar para DBs existentes de outros projetos.
+
+Comandos locais:
+```sh
+npm install --no-audit --no-fund
+npm run test:api
+npm run test:domain
+npm run test:workerd
+npm run typecheck
+npm test
+npm run build
+npx cf deploy --dry-run
+```
+
+Para deploy de teste remoto: primeiro registrar banco D1 dedicado do RFBTicket, Firebase sandbox e seus planos/cotas, secrets separados; aplicar schema remoto **somente** ao banco recém-criado após verificação. Nenhum desses passos remotos ocorreu nesta rodada.
