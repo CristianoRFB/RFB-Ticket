@@ -7,7 +7,7 @@
   "default_branch_baseline": "dbd16775e4b4f47a855fd67a736294421ee1f6b9",
   "working_branch": "feature/rfb-starter-pack-v1",
   "draft_pr": 1,
-  "last_reviewed_code_sha": "40737f84cc23c6c0dbb355eb8e8ea75e63c3c6a1",
+  "last_reviewed_code_sha": "ade0bc31b9273ff284298dc14b4869b2364a79dd",
   "stage": "G2_SANDBOX_CODE_IMPLEMENTED_NOT_HOMOLOGATED",
   "user_target_percent": 90,
   "verified_completion_percent": null,
@@ -33,7 +33,9 @@
     "payments": "FAKE_ONLY",
     "github_ci_40737": "PASS_6_OF_6",
     "github_ci_post_node24": "PASS_6_OF_6_PRE_WEBHOOK",
-    "github_ci_F03_221c": "PASS_6_OF_6"
+    "github_ci_F03_221c": "PASS_6_OF_6",
+    "github_ci_ade0": "PASS_6_OF_6",
+    "github_ci_signed_webhook_4105": "PASS_6_OF_6"
   },
   "cloudflare": {
     "account_read_only_audited": true,
@@ -49,11 +51,17 @@
   "production": false,
   "no_merge": true,
   "no_billing": true,
-  "next_action": "Verify admin implementation GitHub CI; then configure isolated Firebase/D1 and ADMIN_UID only with authorized test Firebase UID; perform real cross-tenant tests and operational QA.",
+  "next_action": "On next RFB Method round, inspect PR #1 HEAD and CI; arrange isolated Firebase Auth test project and D1 sandbox after actual cost/permissions checks; run authenticated end-to-end checkout, two-device check-in and real D1 contention; finish remaining security/UX gates before any claim of 90%.",
   "scope_details": {
     "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
     "F05_webhook": "FAKE_PROVIDER_SIGNED_WEBHOOK_IMPLEMENTED_LOCAL_NO_REAL_GATEWAY",
     "API_routes": "SANDBOX_ONLY",
     "admin_readonly": "CODE_IMPLEMENTED_FAIL_CLOSED_NO_UID_CONFIGURED"
+  },
+  "github_triage": {
+    "issues_open": 0,
+    "prs_open": 1,
+    "draft_pr1": "KEEP_OPEN_NOT_MERGED",
+    "base_main_unchanged": true
   }
 }

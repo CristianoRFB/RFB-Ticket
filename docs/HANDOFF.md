@@ -23,3 +23,8 @@ Implementado em código: eventos/lotes, reserva SQL transacional, buyer idempote
 
 ## S006 Admin read-only
 - Escopo: actor 5, /api/admin/summary, UID fixado pelo servidor, visão agregada no React, negação 403 por padrão. Node 11/11 PASS. Para tornar testável remotamente, configurar ADMIN_UID somente no Worker de sandbox autorizado e testar Firebase ID token real.
+
+## Encerramento da rodada / retomada
+- HEAD de código confirmado: `ade0bc31b9273ff284298dc14b4869b2364a79dd`, PR #1 DRAFT, main intacta. GitHub CI 6/6 PASS neste SHA (backend, frontend, browser).
+- Backend Node SQLite 11/11 PASS, domínio 5/5 PASS, Playwright demo 6/6 PASS. Segurança de produção NÃO homologada.
+- Próximo passo autônomo seguro é reconciliar novos PRs/Issues, verificar checkout e código, depois preparar D1 + Firebase **isolados** somente após validar custos e autorização. Executar testes reais de corrida em portaria e checkout, testar mobile com câmera e análise de negação entre organizações; fechar F05 com gateway sandbox real antes de falar em 90%.

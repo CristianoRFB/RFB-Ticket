@@ -38,3 +38,8 @@ Nenhuma credencial, PII real, conta de cobrança, deploy ou merge. D1 Free e Wor
 ## S006 — administrador com acesso fail-closed
 - GET /api/admin/summary exige UID autenticado idêntico à variável Worker ADMIN_UID; sem configuração é negado (403). Relatório só agregado, sem e-mail ou segredos.
 - Menu Administração React disponível somente quando /api/me atesta isAdmin; o servidor continua autoritativo. Node SQLite 11/11 PASS; staging não configurado.
+
+## Checkpoint final — 2026-11-22 BRT
+- Último HEAD de código verificado `ade0bc31b9273ff284298dc14b4869b2364a79dd`. F05 fake webhook, F03 numeração, admin read-only e 11 testes Node SQLite.
+- Todas as seis verificações GitHub CI para este commit PASS, inclusive build TS/Vite, unit, backend e 6 browser E2E da demonstração (3 cenários nos 2 viewports).
+- Sem D1 real nem Firebase configurado, sem operador/telefone para validar portaria e sem provedor financeiro sandbox; nada publicado/mesclado. Meta 90% NÃO COMPROVADA.
