@@ -267,7 +267,7 @@ export async function handleApi(request,env) {
       const orderId=crypto.randomUUID(),t=now(),expires=t+600;
       const insert=env.DB.prepare(`INSERT INTO orders(id,buyer_uid,event_id,lot_id,quantity,amount_cents,status,hold_expires_at,request_key,created_at)
         SELECT ?,?,l.event_id,l.id,?,l.price_cents*?,'creating',?,?,? FROM lots l JOIN events e ON e.id=l.event_id
-        WHERE l.id=? AND e.status='published' AND l.status='available' AND l.capacity-l.issued-l.reserved>=?`).bind(orderId,user.uid,quantity,quantity,expires,requestKey,t,lotId,quantity);
+        WHERE l.id=? AND e.status='published' AND l.status='available' AND l.capacity-l.issued-l.reserved>=? AND (SELECT COUNT(*) FROM orders h WHERE h.buyer_uid=? AND h.status='held' AND h.hold_expires_at>?)<5`).bind(orderId,user.uid,quantity,quantity,expires,requestKey,t,lotId,quantity,user.uid,t);
       let batch;
       try {batch=await env.DB.batch([
         insert,
@@ -278,7 +278,11 @@ export async function handleApi(request,env) {
         if(existing){if(existing.lot_id!==lotId||existing.quantity!==quantity)bad('IDEMPOTENCY_CONFLICT',409);return ok({order:existing,replayed:true});}
         throw e;
       }
-      if(!batch[0]?.meta?.changes)bad('SOLD_OUT_OR_UNAVAILABLE',409);
+      if(!batch[0]?.meta?.changes){
+        const holding=await env.DB.prepare("SELECT COUNT(*) AS n FROM orders WHERE buyer_uid=? AND status='held' AND hold_expires_at>?").bind(user.uid,t).first();
+        if(Number(holding?.n||0)>=5)bad('ACTIVE_HOLD_LIMIT',429);
+        bad('SOLD_OUT_OR_UNAVAILABLE',409);
+      }
       const order=await env.DB.prepare('SELECT * FROM orders WHERE id=? AND buyer_uid=?').bind(orderId,user.uid).first();
       await audit(env.DB,order.event_id,user.uid,'ORDER_HELD',orderId);
       return ok({order,sandbox:true},201);
