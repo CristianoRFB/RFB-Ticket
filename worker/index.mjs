@@ -278,13 +278,25 @@ export async function handleApi(request,env) {
         return ok({status:'cancelled'});
       }
       if(operation==='refund') {
+        // Fake refund: atomically revoke QR credentials and return their sold
+        // seats to inventory. Checked-in or transferred tickets remain ineligible.
         const result=await env.DB.batch([
-          env.DB.prepare("UPDATE orders SET status='refunded' WHERE id=? AND buyer_uid=? AND status='issued' AND NOT EXISTS(SELECT 1 FROM tickets WHERE order_id=? AND (status!='issued' OR owner_uid!=?))").bind(orderId,user.uid,orderId,user.uid),
-          env.DB.prepare("UPDATE tickets SET status='revoked',token_version=token_version+1 WHERE order_id=? AND status='issued' AND EXISTS(SELECT 1 FROM orders WHERE id=? AND status='refunded')").bind(orderId,orderId),
+          env.DB.prepare(`UPDATE orders SET status='refunded' WHERE id=? AND buyer_uid=?
+            AND status='issued'
+            AND NOT EXISTS(SELECT 1 FROM tickets WHERE order_id=?
+              AND (status!='issued' OR owner_uid!=?))
+            AND EXISTS(SELECT 1 FROM lots WHERE id=orders.lot_id AND issued>=orders.quantity)`)
+            .bind(orderId,user.uid,orderId,user.uid),
+          env.DB.prepare(`UPDATE tickets SET status='revoked',token_version=token_version+1
+            WHERE order_id=? AND status='issued'
+            AND EXISTS(SELECT 1 FROM orders WHERE id=? AND status='refunded')`).bind(orderId,orderId),
+          env.DB.prepare(`UPDATE lots SET issued=issued-? WHERE id=? AND issued>=?
+            AND EXISTS(SELECT 1 FROM orders WHERE id=? AND status='refunded')`)
+            .bind(order.quantity,order.lot_id,order.quantity,orderId),
         ]);
         if(!result[0]?.meta?.changes)bad('REFUND_DENIED',409);
-        await audit(env.DB,order.event_id,user.uid,'SANDBOX_REFUND',orderId);
-        return ok({status:'refunded',moneyReturned:false,sandbox:true});
+        await audit(env.DB,order.event_id,user.uid,'SANDBOX_REFUND_AND_STOCK_RELEASE',orderId);
+        return ok({status:'refunded',moneyReturned:false,capacityReleased:true,sandbox:true});
       }
       if(operation==='sandbox-confirm') {
         if(env.SANDBOX_MODE!=='true')bad('SANDBOX_DISABLED',503);
