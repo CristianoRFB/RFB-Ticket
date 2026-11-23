@@ -24,9 +24,10 @@ function AuthPanel({onDone}:{onDone:()=>void}) {
     <button type="button" className="live-link" onClick={()=>setCreating(!creating)}>{creating?'Já tenho conta':'Cadastrar conta de teste'}</button>
   </form>;
 }
-function GateScanner({onScan}:{onScan:(token:string)=>Promise<void>}) {
+function GateScanner({onScan}:{onScan:(token:string)=>Promise<boolean>}) {
   const videoRef=useRef<HTMLVideoElement>(null),running=useRef(false);
   const [message,setMessage]=useState(''),[open,setOpen]=useState(false);
+  const lastScan=useRef<{value:string;time:number}>({value:'',time:0});
   useEffect(()=>{
     if(!open)return;
     let stream:MediaStream|undefined,interval:ReturnType<typeof setInterval>|undefined,cancelled=false;
@@ -38,7 +39,11 @@ function GateScanner({onScan}:{onScan:(token:string)=>Promise<void>}) {
       const video=videoRef.current;if(!video)return;video.srcObject=media;
       await video.play();const detector=new Detector({formats:['qr_code']});
       interval=setInterval(async()=>{if(running.current||!video||video.readyState<2)return;running.current=true;
-        try {const codes=await detector.detect(video);if(codes[0]?.rawValue){await onScan(codes[0].rawValue);setOpen(false);}}
+        try {const codes=await detector.detect(video);const raw=codes[0]?.rawValue;
+          if(raw && (raw!==lastScan.current.value || Date.now()-lastScan.current.time>5000)){
+            lastScan.current={value:raw,time:Date.now()};
+            if(await onScan(raw))setOpen(false);
+          }}
         catch(e){setMessage(errorText(e));}finally{running.current=false;}
       },450);
     }).catch(e=>setMessage('Acesso à câmera negado: '+errorText(e)));
@@ -84,13 +89,27 @@ export default function LiveApp() {
   async function transfer(ticketId:string) {if(!user)return;const toUid=transferTarget[ticketId];if(!toUid)return;await run(async()=>{
     await api('/api/tickets/'+ticketId+'/transfer',user,'POST',{toUid});await refresh();setMessage('Ingresso transferido; o QR anterior foi invalidado.');
   });}
-  async function checkin(value:string) {if(!user||!scanEvent)return;await run(async()=>{
-    const result=await api<{result:string;replayed:boolean}>('/api/checkin',user,'POST',{eventId:scanEvent,token:value.trim(),requestId:crypto.randomUUID()});
-    setMessage(result.result==='OK'?'ENTRADA APROVADA (SANDBOX). Segunda entrada independente será bloqueada.':'Entrada recusada');setToken('');
-  });}
-  async function reloadManaged(id:string) {if(!user)return;setManageId(id);const [d,r]=await Promise.all([
-    api<EventDetail>('/api/manage/events/'+id,user),api<Report>('/api/events/'+id+'/stats',user)]);
-    setManageDetail(d);setReport(r);
+  async function checkin(value:string):Promise<boolean> {
+    if(!user||!scanEvent||!value.trim()){setMessage('Selecione o evento e informe o token.');return false;}
+    setBusy(true);setMessage('');
+    try {
+      const result=await api<{result:string;replayed:boolean}>('/api/checkin',user,'POST',{eventId:scanEvent,token:value.trim(),requestId:crypto.randomUUID()});
+      if(result.result!=='OK'){setMessage('ENTRADA RECUSADA (SANDBOX).');return false;}
+      setMessage('ENTRADA APROVADA (SANDBOX). Segunda entrada independente será bloqueada.');
+      setToken('');
+      return true;
+    }catch(e){setMessage('ENTRADA BLOQUEADA: '+errorText(e));return false;}
+    finally{setBusy(false);}
+  }
+  async function reloadManaged(id:string) {
+    if(!user)return;
+    const d=await api<EventDetail>('/api/manage/events/'+id,user);
+    setManageId(id);setManageDetail(d);
+    // A fiscal is allowed to consult an event but NOT its financial report.
+    if(d.event.organizer_uid===user.uid){
+      const r=await api<Report>('/api/events/'+id+'/stats',user);
+      setReport(r);
+    } else setReport(null);
   }
   async function createEvent(e:FormEvent){e.preventDefault();if(!user)return;await run(async()=>{
     const x=await api<{eventId:string}>('/api/events',user,'POST',{title:newEventTitle,city:newEventCity,startsAt:new Date(newEventDate).toISOString(),description:'Evento sandbox criado pelo organizador.'});
@@ -103,6 +122,16 @@ export default function LiveApp() {
   async function doManage(path:string,body:unknown={}) {if(!user||!manageId)return;await run(async()=>{
     await api('/api/events/'+manageId+'/'+path,user,'POST',body);await refresh();await reloadManaged(manageId);setMessage('Operação de organização concluída.');
   });}
+  async function toggleLot(lot:Lot) {if(!user||!manageId)return;await run(async()=>{
+    await api('/api/lots/'+lot.id,user,'PATCH',{status:lot.status==='available'?'paused':'available'});
+    await reloadManaged(manageId);setMessage('Status do lote atualizado.');
+  });}
+  async function revokeGate(uid:string) {if(!user||!manageId)return;await run(async()=>{
+    await api('/api/events/'+manageId+'/staff/'+encodeURIComponent(uid),user,'DELETE');
+    await reloadManaged(manageId);setMessage('Acesso de fiscal revogado imediatamente.');
+  });}
+  const [cancelArmed,setCancelArmed]=useState(false);
+  const isEventOwner=!!user && !!manageDetail && manageDetail.event.organizer_uid===user.uid;
   const nav:[Tab,string][]=[['explorar','Eventos'],['pedidos','Pedidos'],['ingressos','Meus ingressos'],['portaria','Portaria'],['organizador','Organizador']];
   if(isAdmin)nav.push(['admin','Administração']);
   return <div className="live-shell">
@@ -139,12 +168,19 @@ export default function LiveApp() {
       <h3>Eventos sob sua gestão</h3>{managed.map(e=><button key={e.id} type="button" className="live-option" onClick={()=>run(()=>reloadManaged(e.id))}><strong>{e.title}</strong><span>{e.status}</span></button>)}
     </section><section className="live-panel"><h2>Operação {manageDetail?('— '+manageDetail.event.title):''}</h2>{!manageDetail?<p>Selecione um evento.</p>:<>
       <p>Status: <strong>{manageDetail.event.status}</strong></p>
-      <form className="live-form" onSubmit={addLot}><h3>Novo lote</h3><label>Nome <input required value={newLotLabel} onChange={e=>setNewLotLabel(e.target.value)}/></label><label>Capacidade <input required type="number" min={1} value={newLotCapacity} onChange={e=>setNewLotCapacity(Number(e.target.value))}/></label><label>Preço fictício (centavos) <input required type="number" min={0} value={newLotPrice} onChange={e=>setNewLotPrice(Number(e.target.value))}/></label><button disabled={busy} type="submit">Criar lote</button></form>
-      <h3>Lotes</h3>{manageDetail.lots.map(l=><div className="live-listitem" key={l.id}><span><strong>{l.label}</strong><small>{l.issued} emitidos · {l.reserved} reservados · limite {l.capacity}</small></span><span>{money(l.price_cents)} · {l.status}</span></div>)}
-      {manageDetail.event.status==='draft'&&<button disabled={busy||!manageDetail.lots.length} onClick={()=>doManage('publish')}>Publicar evento</button>}
-      <form className="live-form" onSubmit={e=>{e.preventDefault();doManage('staff',{uid:staffUid});}}><h3>Autorizar fiscal</h3><label>UID Firebase do fiscal <input value={staffUid} onChange={e=>setStaffUid(e.target.value)} required/></label><button type="submit" disabled={busy}>Conceder acesso à portaria</button></form>
-      <h3>Relatório do evento</h3>{report&&<div className="live-metrics"><div><strong>{report.stats.capacity}</strong><span>Capacidade total</span></div><div><strong>{report.stats.issued}</strong><span>Ingressos emitidos</span></div><div><strong>{report.stats.checkins}</strong><span>Entradas validadas</span></div><div><strong>{money(report.stats.sandbox_revenue_cents)}</strong><span>Faturamento simulado</span></div></div>}
-      <button className="live-secondary" disabled={busy} onClick={()=>run(()=>reloadManaged(manageId))}>Atualizar relatório</button>
+      {isEventOwner&&manageDetail.event.status!=='cancelled'&&<form className="live-form" onSubmit={addLot}><h3>Novo lote</h3><label>Nome <input required value={newLotLabel} onChange={e=>setNewLotLabel(e.target.value)}/></label><label>Capacidade <input required type="number" min={1} value={newLotCapacity} onChange={e=>setNewLotCapacity(Number(e.target.value))}/></label><label>Preço fictício (centavos) <input required type="number" min={0} value={newLotPrice} onChange={e=>setNewLotPrice(Number(e.target.value))}/></label><button disabled={busy} type="submit">Criar lote</button></form>}
+      <h3>Lotes</h3>{manageDetail.lots.map(l=><div className="live-listitem" key={l.id}><span><strong>{l.label}</strong><small>{l.issued} emitidos · {l.reserved} reservados · limite {l.capacity}</small></span><span>{money(l.price_cents)} · {l.status}</span>{isEventOwner&&manageDetail.event.status!=='cancelled'&&<button type="button" className="live-secondary" disabled={busy} onClick={()=>toggleLot(l)}>{l.status==='available'?'Pausar':'Reativar'}</button>}</div>)}
+      {isEventOwner&&manageDetail.event.status==='draft'&&<button disabled={busy||!manageDetail.lots.length} onClick={()=>doManage('publish')}>Publicar evento</button>}
+      {isEventOwner&&manageDetail.event.status!=='cancelled'&&<div className="live-actions">
+        <button className="live-secondary" type="button" onClick={()=>setCancelArmed(x=>!x)}>{cancelArmed?'Manter evento':'Solicitar cancelamento do evento'}</button>
+        {cancelArmed&&<button type="button" disabled={busy} onClick={()=>{setCancelArmed(false);doManage('cancel');}}>Confirmar cancelamento irreversível (sandbox)</button>}
+      </div>}
+      {isEventOwner&&manageDetail.event.status!=='cancelled'&&<form className="live-form" onSubmit={e=>{e.preventDefault();doManage('staff',{uid:staffUid});}}><h3>Autorizar fiscal</h3><label>UID Firebase do fiscal <input value={staffUid} onChange={e=>setStaffUid(e.target.value)} required/></label><button type="submit" disabled={busy}>Conceder acesso à portaria</button></form>}
+      {isEventOwner&&<><h3>Fiscais autorizados</h3>{!manageDetail.staff?.length&&<p>Nenhum fiscal adicionado.</p>}
+        {manageDetail.staff?.map(s=><div className="live-listitem" key={s.uid}><span>UID: {s.uid} · {s.role}</span>
+          <button type="button" className="live-secondary" disabled={busy} onClick={()=>revokeGate(s.uid)}>Revogar acesso</button></div>)}</>}
+      {isEventOwner&&<h3>Relatório do evento</h3>}{report&&<div className="live-metrics"><div><strong>{report.stats.capacity}</strong><span>Capacidade total</span></div><div><strong>{report.stats.issued}</strong><span>Ingressos emitidos</span></div><div><strong>{report.stats.checkins}</strong><span>Entradas validadas</span></div><div><strong>{money(report.stats.sandbox_revenue_cents)}</strong><span>Faturamento simulado</span></div></div>}
+      {isEventOwner&&<button className="live-secondary" disabled={busy} onClick={()=>run(()=>reloadManaged(manageId))}>Atualizar relatório</button>}
       </>}
     </section></main>}
     {tab==='admin' && isAdmin && <main className="live-panel"><h2>Administração — leitura restrita</h2>
