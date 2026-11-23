@@ -1,6 +1,6 @@
 import test,{before,after} from 'node:test';
 import assert from 'node:assert/strict';
-import {generateKeyPairSync,createSign,randomUUID} from 'node:crypto';
+import {generateKeyPairSync,createSign,createHmac,randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {Miniflare,createFetchMock} from 'miniflare';
 
@@ -110,4 +110,65 @@ test('workerd D1: two concurrent buyers cannot oversell and the signed QR is sin
   const approved=admitA.status===200?{uid:gate,id:firstId}:{uid:organizer,id:secondId};
   const replay=await request('/api/checkin','POST',{eventId,token,requestId:approved.id},approved.uid);
   assert.equal(replay.status,200);assert.equal(replay.replayed,true);
+});
+
+
+test('workerd D1: gate revocation and event cancellation revoke issued QR',async()=>{
+  const created=await request('/api/events','POST',{title:'Evento reversível sandbox',city:'Jales',startsAt:'2027-10-01T20:00:00Z'},organizer);
+  assert.equal(created.status,201);
+  const ev=created.eventId;
+  const l=await request('/api/events/'+ev+'/lots','POST',{label:'Lote 1',capacity:2,priceCents:900},organizer);
+  assert.equal(l.status,201);
+  assert.equal((await request('/api/events/'+ev+'/publish','POST',{},organizer)).status,200);
+  const held=await request('/api/orders','POST',{lotId:l.lotId,quantity:1,requestKey:randomUUID()},buyerA);
+  const ticket=await request('/api/orders/'+held.order.id+'/sandbox-confirm','POST',{},buyerA);
+  assert.equal(ticket.status,200);
+  assert.equal((await request('/api/events/'+ev+'/staff','POST',{uid:'gate-workerd'},organizer)).status,200);
+  assert.equal((await request('/api/events/'+ev+'/staff/gate-workerd','DELETE',undefined,buyerA)).status,403);
+  assert.equal((await request('/api/events/'+ev+'/staff/gate-workerd','DELETE',undefined,organizer)).status,200);
+  assert.equal((await request('/api/checkin','POST',{eventId:ev,token:ticket.tickets[0].token,requestId:randomUUID()},gate)).status,403);
+  const cancelled=await request('/api/events/'+ev+'/cancel','POST',{},organizer);
+  assert.equal(cancelled.status,200);assert.equal(cancelled.moneyReturned,false);
+  assert.equal((await request('/api/events/'+ev)).status,404);
+  const orders=await request('/api/orders','GET',undefined,buyerA);
+  assert.equal(orders.orders.find(o=>o.id===held.order.id).status,'refunded');
+  const tickets=await request('/api/tickets','GET',undefined,buyerA);
+  assert.equal(tickets.tickets.find(t=>t.id===ticket.tickets[0].id).status,'revoked');
+  assert.equal((await request('/api/checkin','POST',{eventId:ev,token:ticket.tickets[0].token,requestId:randomUUID()},organizer)).status,400);
+});
+
+test('workerd D1: fake webhook cryptographic verification and exactly-once ticket issuance',async()=>{
+  const created=await request('/api/events','POST',{title:'Provedor fictício',city:'Jales',startsAt:'2027-10-10T20:00:00Z'},organizer);
+  const ev=created.eventId;
+  const l=await request('/api/events/'+ev+'/lots','POST',{label:'Único',capacity:1,priceCents:1500},organizer);
+  await request('/api/events/'+ev+'/publish','POST',{},organizer);
+  const held=await request('/api/orders','POST',{lotId:l.lotId,quantity:1,requestKey:randomUUID()},buyerB);
+  assert.equal(held.status,201);
+  const secret='another-fake-webhook-secret-longer-than-32';
+  const raw=JSON.stringify({webhookId:randomUUID(),orderId:held.order.id,status:'sandbox_paid'});
+  const ts=String(Math.floor(Date.now()/1000));
+  const sig=createHmac('sha256',secret).update(ts+'.'+raw).digest('hex');
+  async function webhook(signature) {
+    const reply=await mf.dispatchFetch('https://local.test/api/webhooks/sandbox',{
+      method:'POST',headers:{'content-type':'application/json','x-rfb-timestamp':ts,'x-rfb-signature':signature},
+      body:raw
+    });
+    return {httpStatus:reply.status,...await reply.json()};
+  }
+  assert.equal((await webhook('0'.repeat(64))).httpStatus,401);
+  const first=await webhook(sig);assert.equal(first.httpStatus,200);assert.equal(first.replayed,false);
+  const replay=await webhook(sig);assert.equal(replay.httpStatus,200);assert.equal(replay.replayed,true);
+  const count=await db.prepare('SELECT COUNT(*) AS n FROM tickets WHERE order_id=?').bind(held.order.id).first();
+  assert.equal(count.n,1);
+  const order=await db.prepare('SELECT status FROM orders WHERE id=?').bind(held.order.id).first();
+  assert.equal(order.status,'issued');
+});
+
+test('workerd D1: cross-tenant organizer cannot manage events owned by another user',async()=>{
+  const other=await request('/api/events','POST',{title:'Evento de outro tenant',city:'Votuporanga',startsAt:'2027-11-02T22:00:00Z'},buyerB);
+  assert.equal(other.status,201);
+  assert.equal((await request('/api/events/'+other.eventId+'/lots','POST',{label:'Inválido',capacity:1,priceCents:100},organizer)).status,403);
+  assert.equal((await request('/api/events/'+other.eventId+'/staff','POST',{uid:'gate-workerd'},organizer)).status,403);
+  assert.equal((await request('/api/events/'+other.eventId+'/cancel','POST',{},organizer)).status,403);
+  assert.equal((await request('/api/manage/events/'+other.eventId,'GET',undefined,organizer)).status,403);
 });
