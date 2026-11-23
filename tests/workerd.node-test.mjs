@@ -244,7 +244,7 @@ test('workerd D1: one-time ticket transfer rotates QR and new owner can enter',a
   const issued=await request('/api/orders/'+hold.order.id+'/sandbox-confirm','POST',{},buyerA);
   assert.equal(issued.status,200);
   const item=issued.tickets[0],oldToken=item.token;
-  const forbidden=await request('/api/tickets/'+item.id+'/transfer','POST',{toUid:'buyer-workerd-b'},buyerB);
+  const forbidden=await request('/api/tickets/'+item.id+'/transfer','POST',{toUid:'buyer-workerd-a'},buyerB);
   assert.equal(forbidden.status,404);
   const transferred=await request('/api/tickets/'+item.id+'/transfer','POST',{toUid:'buyer-workerd-b'},buyerA);
   assert.equal(transferred.status,200);assert.equal(transferred.oldTokenRevoked,true);
