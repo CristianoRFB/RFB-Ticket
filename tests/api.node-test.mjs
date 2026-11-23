@@ -200,4 +200,18 @@ test('F05 fake-provider callback signature is required, replays cannot issue tic
  assert.equal(db.prepare('SELECT status FROM orders WHERE id=?').get(order.order.id).status,'issued');
  assert.equal((await fire(signature,timestamp,payload+' ')).httpStatus,401);
 });
+test('administrator dashboard is read-only and granted only by trusted backend config',async()=>{
+ const admin=token('admin-trusted');
+ env.ADMIN_UID='admin-trusted';
+ const ok=await api('/api/admin/summary','GET',null,admin);
+ assert.equal(ok.httpStatus,200);assert.equal(ok.readOnly,true);
+ assert.ok(ok.stats.total_events>=2);
+ assert.ok(ok.stats.issued_tickets>=3);
+ const denied=await api('/api/admin/summary','GET',null,b);
+ assert.equal(denied.httpStatus,403);
+ assert.equal((await api('/api/me','GET',null,admin)).isAdmin,true);
+ assert.equal((await api('/api/me','GET',null,b)).isAdmin,false);
+ delete env.ADMIN_UID;
+ assert.equal((await api('/api/admin/summary','GET',null,admin)).httpStatus,403);
+});
 after(()=>{globalThis.fetch=originalFetch;db.close();});

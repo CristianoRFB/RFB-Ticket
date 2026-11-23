@@ -13,6 +13,7 @@ Sistema de ingressos experimentais para eventos, com React/Vite, identidade Fire
 - Ingressos: emissão HMAC verificável, numeração global sequencial (no banco sandbox), QR SVG (frontend), visualização privada e transferência uma vez com revogação de QR anterior.
 - Portaria: QR por câmera quando suportado, fallback manual, fiscal autorizado por evento e uso único com UNIQUE em D1.
 - Relatórios: capacidade, ingressos emitidos, check-ins e receita fictícia; trilha simples de auditoria.
+- Administração: visão agregada apenas de leitura, protegida por UID pré-configurado no Worker; negada por padrão.
 - Reembolso: operação interna fictícia, bloqueia após check-in/transferência, não devolve dinheiro.
 
 ## Rodar localmente
@@ -27,7 +28,7 @@ npm run build
 npm run dev
 ```
 
-**Testes realmente executados no executor local:** API SQLite nativo de Node 22 (10 cenários PASS), sintaxe de Worker e JSX via transpilação TypeScript. Build Vite, typecheck global e Playwright da demonstração: PASS no GitHub Actions; execução de Firebase/Cloudflare reais: NOT_RUN.
+**Testes realmente executados no executor local:** API SQLite nativo de Node 22 (11 cenários PASS), sintaxe de Worker e JSX via transpilação TypeScript. Build Vite, typecheck global e Playwright da demonstração: PASS no GitHub Actions; execução de Firebase/Cloudflare reais: NOT_RUN.
 
 O modo demonstração é ativado sem Firebase. Para testar integração, configurar `.env.local` e banco isolado (ver [Deploy sandbox](docs/DEPLOY-SANDBOX.md)). Não configurar cobrança, gateway ou production account.
 

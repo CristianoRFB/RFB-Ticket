@@ -5,7 +5,7 @@ import { firebaseAuth } from './firebase';
 import { api, displayDate, money, type TicketEvent, type Lot, type Order, type Ticket, type EventDetail, type EventStats } from './api';
 import QR from './QR';
 
-type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador';
+type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador'|'admin';
 type Report = {stats:EventStats;financials:string};
 function errorText(e: unknown) {return e instanceof Error ? e.message : 'Erro inesperado';}
 function AuthPanel({onDone}:{onDone:()=>void}) {
@@ -56,6 +56,7 @@ export default function LiveApp() {
   const [managed,setManaged]=useState<TicketEvent[]>([]),[manageId,setManageId]=useState(''),[manageDetail,setManageDetail]=useState<EventDetail|null>(null);
   const [orders,setOrders]=useState<Order[]>([]),[tickets,setTickets]=useState<Ticket[]>([]),[report,setReport]=useState<Report|null>(null);
   const [quantity,setQuantity]=useState(1),[lotId,setLotId]=useState(''),[token,setToken]=useState(''),[scanEvent,setScanEvent]=useState('');
+  const [isAdmin,setIsAdmin]=useState(false),[adminReport,setAdminReport]=useState<{total_events:number;published_events:number;total_lots:number;sandbox_orders:number;issued_tickets:number;completed_checkins:number}|null>(null);
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[newEventTitle,setNewEventTitle]=useState(''),[newEventCity,setNewEventCity]=useState(''),[newEventDate,setNewEventDate]=useState('');
   const [newLotLabel,setNewLotLabel]=useState(''),[newLotCapacity,setNewLotCapacity]=useState(40),[newLotPrice,setNewLotPrice]=useState(2500),[staffUid,setStaffUid]=useState(''),[transferTarget,setTransferTarget]=useState<Record<string,string>>({});
   const userRef=useRef<User|null>(user);userRef.current=user;
@@ -63,10 +64,10 @@ export default function LiveApp() {
   async function refresh(activeUser:User|null=userRef.current){
     const publicData=await api<{events:TicketEvent[]}>('/api/events',null);
     setEvents(publicData.events);
-    if(activeUser){const [mine,ts,orgs]=await Promise.all([
-      api<{orders:Order[]}>('/api/orders',activeUser),api<{tickets:Ticket[]}>('/api/tickets',activeUser),api<{events:TicketEvent[]}>('/api/manage/events',activeUser)]);
-      setOrders(mine.orders);setTickets(ts.tickets);setManaged(orgs.events);
-    } else {setOrders([]);setTickets([]);setManaged([]);}
+    if(activeUser){const [mine,ts,orgs,identity]=await Promise.all([
+      api<{orders:Order[]}>('/api/orders',activeUser),api<{tickets:Ticket[]}>('/api/tickets',activeUser),api<{events:TicketEvent[]}>('/api/manage/events',activeUser),api<{isAdmin:boolean}>('/api/me',activeUser)]);
+      setOrders(mine.orders);setTickets(ts.tickets);setManaged(orgs.events);setIsAdmin(identity.isAdmin===true);
+    } else {setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);}
   }
   useEffect(()=>{refresh(user).catch(e=>setMessage(errorText(e)));},[user]);
   async function run(action:()=>Promise<void>) {setBusy(true);setMessage('');try{await action();}catch(e){setMessage(errorText(e));}finally{setBusy(false);}}
@@ -103,6 +104,7 @@ export default function LiveApp() {
     await api('/api/events/'+manageId+'/'+path,user,'POST',body);await refresh();await reloadManaged(manageId);setMessage('Operação de organização concluída.');
   });}
   const nav:[Tab,string][]=[['explorar','Eventos'],['pedidos','Pedidos'],['ingressos','Meus ingressos'],['portaria','Portaria'],['organizador','Organizador']];
+  if(isAdmin)nav.push(['admin','Administração']);
   return <div className="live-shell">
     <header className="live-header"><div><p className="live-kicker">RFB LABS / ACESSO A EVENTOS</p><h1>RFBTicket <span>Sandbox</span></h1><p>Bilheteria de demonstração com validação online. Sem pagamentos reais.</p></div>
       <div className="live-identity">{user?<><span title="UID do Firebase">UID: {user.uid}</span><button type="button" className="live-secondary" onClick={()=>firebaseAuth&&signOut(firebaseAuth)}>Sair</button></>:<span>Visitante — autentique para operar</span>}</div>
@@ -145,6 +147,16 @@ export default function LiveApp() {
       <button className="live-secondary" disabled={busy} onClick={()=>run(()=>reloadManaged(manageId))}>Atualizar relatório</button>
       </>}
     </section></main>}
+    {tab==='admin' && isAdmin && <main className="live-panel"><h2>Administração — leitura restrita</h2>
+      <p>Relatório agregado de todos os eventos sandbox. A concessão de administrador é configurada no backend, nunca na interface.</p>
+      <button type="button" disabled={busy||!user} onClick={()=>run(async()=>{if(!user)return;const x=await api<{stats:NonNullable<typeof adminReport>}>('/api/admin/summary',user);setAdminReport(x.stats);})}>Atualizar visão administrativa</button>
+      {adminReport&&<div className="live-metrics"><div><strong>{adminReport.total_events}</strong><span>Eventos no sandbox</span></div>
+      <div><strong>{adminReport.published_events}</strong><span>Eventos publicados</span></div>
+      <div><strong>{adminReport.total_lots}</strong><span>Lotes cadastrados</span></div>
+      <div><strong>{adminReport.sandbox_orders}</strong><span>Pedidos fictícios</span></div>
+      <div><strong>{adminReport.issued_tickets}</strong><span>Ingressos emitidos</span></div>
+      <div><strong>{adminReport.completed_checkins}</strong><span>Entradas demonstrativas</span></div></div>}
+    </main>}
     <footer className="live-footer">RFB Method — sandbox sem valor financeiro, sem cobrança, sem ingresso para eventos reais.</footer>
   </div>;
 }

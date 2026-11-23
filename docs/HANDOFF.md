@@ -20,3 +20,6 @@ Implementado em código: eventos/lotes, reserva SQL transacional, buyer idempote
 ## Webhook assinado simulado S005
 - worker/webhook.mjs + /api/webhooks/sandbox assinam e verificam callbacks fictícios com segredo SANDBOX_WEBHOOK_SECRET e evento idempotente sandbox_webhooks. Node SQLite 10/10 PASS. NÃO equivale a Mercado Pago/Stripe ou outro integrador; nenhum webhook/PIX real e nenhuma cobrança.
 - Config cloudflare agora exige dois Worker secrets sem versionar; criar ambiente isolado apenas com permissão e quotas Free verificadas.
+
+## S006 Admin read-only
+- Escopo: actor 5, /api/admin/summary, UID fixado pelo servidor, visão agregada no React, negação 403 por padrão. Node 11/11 PASS. Para tornar testável remotamente, configurar ADMIN_UID somente no Worker de sandbox autorizado e testar Firebase ID token real.

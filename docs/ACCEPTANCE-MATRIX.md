@@ -20,3 +20,7 @@
 **Módulos:** Eventos, Lotes, Checkout fake, Emissão, Meus ingressos, Leitor QR, Check-in, Reembolso fake, Painel do organizador, Relatórios têm rotas e/ou UI de sandbox, mas não são 10 módulos homologados. Administrador, 58 telas, screenshots de produto real, cadastro/roles reais e publicação permanecem incompletos.
 
 **Evidência:** PR #1, testes/api.node-test.mjs (8 PASS em Node SQLite), testes/ticketDomain.node-test.mjs (5 PASS), workflows GitHub; executar integrações reais antes de cada aceite.
+
+## Atores / permissão
+
+Visitante, comprador, organizador e fiscal possuem interfaces e controles de sandbox. O quinto ator, **Administrador**, possui rota GET /api/admin/summary e interface agregada somente-leitura condicionada a ADMIN_UID no Worker. Sem UID configurado a API responde 403. Node SQLite 11º teste valida acesso autorizado, negado e fail-closed. Não há admin CRUD de usuários nem privilégios conferidos pelo navegador; permanece pendente validação real com Firebase/D1.

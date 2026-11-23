@@ -91,7 +91,19 @@ export async function handleApi(request,env) {
       return ok({accepted:true,replayed:false,sandbox:true});
     }
     const user=await authenticate(request,env);
-    if(method==='GET' && path==='/api/me')return ok({uid:user.uid,emailVerified:user.emailVerified});
+    if(method==='GET' && path==='/api/me')return ok({uid:user.uid,emailVerified:user.emailVerified,isAdmin:typeof env.ADMIN_UID==='string' && env.ADMIN_UID.length>0 && user.uid===env.ADMIN_UID});
+    // A read-only administrative overview. No arbitrary self-assigned roles and no personal data.
+    if(method==='GET' && path==='/api/admin/summary'){
+      if(!env.ADMIN_UID || user.uid!==env.ADMIN_UID)bad('NO_PERMISSION',403);
+      const stats=await env.DB.prepare(`SELECT
+        (SELECT COUNT(*) FROM events) AS total_events,
+        (SELECT COUNT(*) FROM events WHERE status='published') AS published_events,
+        (SELECT COUNT(*) FROM lots) AS total_lots,
+        (SELECT COUNT(*) FROM orders) AS sandbox_orders,
+        (SELECT COUNT(*) FROM tickets) AS issued_tickets,
+        (SELECT COUNT(*) FROM checkins) AS completed_checkins`).first();
+      return ok({stats,financials:'sandbox_only',readOnly:true});
+    }
 
     const managerDetail=/^\/api\/manage\/events\/([^/]+)$/.exec(path);
     if(method==='GET' && managerDetail) {

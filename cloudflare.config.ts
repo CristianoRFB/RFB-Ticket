@@ -26,6 +26,8 @@ export default defineConfig({
       // Replace name with a dedicated sandbox database after verifying cf's plan.
       DB: bindings.d1({ name: 'rfb-ticket-sandbox' }),
       FIREBASE_PROJECT_ID: bindings.text('REPLACE_WITH_SANDBOX_PROJECT_ID'),
+      // Optional: ADMIN_UID: bindings.text('APPROVED_TEST_FIREBASE_UID'),
+      // Without explicit ADMIN_UID, all admin operations deny access.
       SANDBOX_MODE: bindings.text('true'),
       TICKET_SIGNING_SECRET: bindings.secret('TICKET_SIGNING_SECRET'),
       SANDBOX_WEBHOOK_SECRET: bindings.secret('SANDBOX_WEBHOOK_SECRET'),

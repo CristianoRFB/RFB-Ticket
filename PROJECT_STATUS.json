@@ -22,7 +22,7 @@
     "Real payment-provider sandbox webhook remains unintegrated; mock HMAC webhook only, old client fake confirm bypass still sandbox-only"
   ],
   "tests": {
-    "local_backend_node_sqlite": "PASS_10_OF_10",
+    "local_backend_node_sqlite": "PASS_11_OF_11",
     "local_domain": "PASS_5_OF_5",
     "github_ci_prior_commit_6a6f": "PASS_4_OF_4",
     "github_backend_3370": "PASS_2_OF_2",
@@ -49,10 +49,11 @@
   "production": false,
   "no_merge": true,
   "no_billing": true,
-  "next_action": "Verify GitHub CI signed fake webhook. Provision isolated D1 and Firebase only with approved account/quotas; run real live transaction and webhook/portaria E2E before any claim of 90%.",
+  "next_action": "Verify admin implementation GitHub CI; then configure isolated Firebase/D1 and ADMIN_UID only with authorized test Firebase UID; perform real cross-tenant tests and operational QA.",
   "scope_details": {
     "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
     "F05_webhook": "FAKE_PROVIDER_SIGNED_WEBHOOK_IMPLEMENTED_LOCAL_NO_REAL_GATEWAY",
-    "API_routes": "SANDBOX_ONLY"
+    "API_routes": "SANDBOX_ONLY",
+    "admin_readonly": "CODE_IMPLEMENTED_FAIL_CLOSED_NO_UID_CONFIGURED"
   }
 }

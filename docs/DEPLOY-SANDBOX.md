@@ -16,9 +16,10 @@
 3. Criar banco D1 exclusivamente para sandbox, NÃO apontar para `vof-2027-staging`, `food-condado-preview` ou quaisquer outros bancos existentes.
 4. Atualizar `cloudflare.config.ts`: `DB` apontando para D1 de teste correto; `FIREBASE_PROJECT_ID` exatamente igual ao `VITE_FIREBASE_PROJECT_ID`.
 5. Configurar segredos Worker `TICKET_SIGNING_SECRET` e `SANDBOX_WEBHOOK_SECRET` via `cf`/dashboard, ambos com 32+ caracteres aleatórios diferentes; **nunca** registrar secret no repo, PR, arquivo `.env`, screenshot ou comentário.
-6. Preencher `.env.local` a partir de `.env.example` com valores públicos do Firebase. Adicionar ao `.gitignore` se ainda não estiver.
-7. Criar o schema `migrations/0001_init.sql` **no D1 de teste** via CLI Cloudflare verificada. NÃO rodar em banco existente com dados reais.
-8. Revisar regras LGPD, privacidade, política de retenção e limites antes de expor qualquer conta de teste externa.
+6. Para habilitar somente a visão administrativa de teste, definir opcionalmente ADMIN_UID como UID do Firebase aprovado, em uma variável de Worker; sem ADMIN_UID, o servidor retorna 403 a todos. Nunca aceitar admin vindo de JSON do cliente.
+7. Preencher `.env.local` a partir de `.env.example` com valores públicos do Firebase. Adicionar ao `.gitignore` se ainda não estiver.
+8. Criar o schema `migrations/0001_init.sql` **no D1 de teste** via CLI Cloudflare verificada. NÃO rodar em banco existente com dados reais.
+9. Revisar regras LGPD, privacidade, política de retenção e limites antes de expor qualquer conta de teste externa.
 
 ## Validar sem publicar
 

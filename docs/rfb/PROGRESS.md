@@ -34,3 +34,7 @@ Nenhuma credencial, PII real, conta de cobrança, deploy ou merge. D1 Free e Wor
 - Nova rota pública POST /api/webhooks/sandbox requer SANDBOX_MODE + SANDBOX_WEBHOOK_SECRET Worker, HMAC SHA256 do corpo e timestamp (janela de 5min). Registra sandbox_webhooks com idempotência e emite ingressos em transação SQL D1 somente com pedido reservado.
 - SQLite mock testes de assinatura inválida, stale, tamper, replay e 1 emissão: Node 10/10 PASS. Não foi usado provedor de pagamentos real. Cliente ainda consegue confirmar ficticiamente sob SANDBOX_MODE, portanto F05 REAL continua incompleta.
 - PR #1 draft. Commit F03 221c685... passou 6/6 checks GitHub Actions; novo webhook deve passar CI antes de marcar verificado.
+
+## S006 — administrador com acesso fail-closed
+- GET /api/admin/summary exige UID autenticado idêntico à variável Worker ADMIN_UID; sem configuração é negado (403). Relatório só agregado, sem e-mail ou segredos.
+- Menu Administração React disponível somente quando /api/me atesta isAdmin; o servidor continua autoritativo. Node SQLite 11/11 PASS; staging não configurado.
