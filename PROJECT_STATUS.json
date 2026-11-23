@@ -4,16 +4,18 @@
   "repository": "CristianoRFB/RFB-Ticket",
   "source_method_pr": 4,
   "source_slug": "11-rfbticket",
-  "stage": "G1_SCAFFOLD_IN_PR",
+  "stage": "G1_REACT_UI_SCAFFOLD",
   "source_imported": true,
-  "scaffold": "PENDING_IMPORT",
+  "scaffold": "PRESENT_NOT_BUILT",
   "backend": "NOT_IMPLEMENTED",
-  "production": false,
+  "real_messages": false,
   "real_payments": false,
+  "production": false,
   "unit_tests": "NOT_RUN",
   "typecheck": "NOT_RUN",
   "build": "NOT_RUN",
   "browser_qa": "NOT_RUN",
   "source_png_assets": "NOT_IMPORTED",
-  "monthly_recurring_cost_added_brl": 0
+  "monthly_recurring_cost_added_brl": 0,
+  "next_action": "Run npm install, test, typecheck and build; then implement G2 real functionality safely."
 }
