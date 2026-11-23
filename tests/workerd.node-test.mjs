@@ -130,6 +130,8 @@ test('workerd D1: gate revocation and event cancellation revoke issued QR',async
   const cancelled=await request('/api/events/'+ev+'/cancel','POST',{},organizer);
   assert.equal(cancelled.status,200);assert.equal(cancelled.moneyReturned,false);
   assert.equal((await request('/api/events/'+ev)).status,404);
+  assert.equal((await request('/api/events/'+ev+'/staff','POST',{uid:'gate-workerd'},organizer)).status,409);
+  assert.equal((await request('/api/lots/'+l.lotId,'PATCH',{status:'paused'},organizer)).status,409);
   const orders=await request('/api/orders','GET',undefined,buyerA);
   assert.equal(orders.orders.find(o=>o.id===held.order.id).status,'refunded');
   const tickets=await request('/api/tickets','GET',undefined,buyerA);
@@ -171,4 +173,26 @@ test('workerd D1: cross-tenant organizer cannot manage events owned by another u
   assert.equal((await request('/api/events/'+other.eventId+'/staff','POST',{uid:'gate-workerd'},organizer)).status,403);
   assert.equal((await request('/api/events/'+other.eventId+'/cancel','POST',{},organizer)).status,403);
   assert.equal((await request('/api/manage/events/'+other.eventId,'GET',undefined,organizer)).status,403);
+});
+
+test('workerd D1: sandbox refund revokes ticket and returns inventory exactly once',async()=>{
+  const created=await request('/api/events','POST',{title:'Reembolso fictício D1',city:'Jales',startsAt:'2027-12-12T20:00:00Z'},organizer);
+  const ev=created.eventId;
+  const lot=await request('/api/events/'+ev+'/lots','POST',{label:'Um lugar',capacity:1,priceCents:1000},organizer);
+  await request('/api/events/'+ev+'/publish','POST',{},organizer);
+  const held=await request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},buyerA);
+  assert.equal(held.status,201);
+  const paid=await request('/api/orders/'+held.order.id+'/sandbox-confirm','POST',{},buyerA);
+  assert.equal(paid.status,200);
+  assert.equal((await request('/api/events/'+ev)).lots[0].available,0);
+  const refunded=await request('/api/orders/'+held.order.id+'/refund','POST',{},buyerA);
+  assert.equal(refunded.status,200);
+  assert.equal(refunded.capacityReleased,true);
+  assert.equal((await request('/api/events/'+ev)).lots[0].available,1);
+  assert.equal((await request('/api/orders/'+held.order.id+'/refund','POST',{},buyerA)).status,409);
+  const ticket=await request('/api/tickets','GET',undefined,buyerA);
+  assert.equal(ticket.tickets.find(x=>x.id===paid.tickets[0].id).status,'revoked');
+  const repurchased=await request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},buyerB);
+  assert.equal(repurchased.status,201);
+  assert.equal((await request('/api/events/'+ev)).lots[0].available,0);
 });
