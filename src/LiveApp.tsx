@@ -64,6 +64,7 @@ export default function LiveApp() {
   const [isAdmin,setIsAdmin]=useState(false),[adminReport,setAdminReport]=useState<{total_events:number;published_events:number;total_lots:number;sandbox_orders:number;issued_tickets:number;completed_checkins:number}|null>(null);
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[newEventTitle,setNewEventTitle]=useState(''),[newEventCity,setNewEventCity]=useState(''),[newEventDate,setNewEventDate]=useState('');
   const [newLotLabel,setNewLotLabel]=useState(''),[newLotCapacity,setNewLotCapacity]=useState(40),[newLotPrice,setNewLotPrice]=useState(2500),[staffUid,setStaffUid]=useState(''),[transferTarget,setTransferTarget]=useState<Record<string,string>>({});
+  const [editTitle,setEditTitle]=useState(''),[editCity,setEditCity]=useState(''),[editDescription,setEditDescription]=useState(''),[editDate,setEditDate]=useState('');
   const userRef=useRef<User|null>(user);userRef.current=user;
   useEffect(()=>firebaseAuth ? onAuthStateChanged(firebaseAuth,u=>{setUser(u);setMessage('');}) : undefined,[]);
   async function refresh(activeUser:User|null=userRef.current){
@@ -105,6 +106,9 @@ export default function LiveApp() {
     if(!user)return;
     const d=await api<EventDetail>('/api/manage/events/'+id,user);
     setManageId(id);setManageDetail(d);
+    setEditTitle(d.event.title);setEditCity(d.event.city);setEditDescription(d.event.description||'');
+    const instant=new Date(d.event.starts_at);
+    setEditDate(Number.isNaN(instant.getTime())?'':new Date(instant.getTime()-instant.getTimezoneOffset()*60000).toISOString().slice(0,16));
     // A fiscal is allowed to consult an event but NOT its financial report.
     if(d.event.organizer_uid===user.uid){
       const r=await api<Report>('/api/events/'+id+'/stats',user);
@@ -121,6 +125,11 @@ export default function LiveApp() {
   });}
   async function doManage(path:string,body:unknown={}) {if(!user||!manageId)return;await run(async()=>{
     await api('/api/events/'+manageId+'/'+path,user,'POST',body);await refresh();await reloadManaged(manageId);setMessage('Operação de organização concluída.');
+  });}
+  async function saveEvent(e:FormEvent) {e.preventDefault();if(!user||!manageId)return;await run(async()=>{
+    await api('/api/events/'+manageId,user,'PATCH',{title:editTitle,city:editCity,
+      description:editDescription,startsAt:new Date(editDate).toISOString()});
+    await refresh();await reloadManaged(manageId);setMessage('Dados do evento atualizados no sandbox.');
   });}
   async function toggleLot(lot:Lot) {if(!user||!manageId)return;await run(async()=>{
     await api('/api/lots/'+lot.id,user,'PATCH',{status:lot.status==='available'?'paused':'available'});
@@ -168,6 +177,14 @@ export default function LiveApp() {
       <h3>Eventos sob sua gestão</h3>{managed.map(e=><button key={e.id} type="button" className="live-option" onClick={()=>run(()=>reloadManaged(e.id))}><strong>{e.title}</strong><span>{e.status}</span></button>)}
     </section><section className="live-panel"><h2>Operação {manageDetail?('— '+manageDetail.event.title):''}</h2>{!manageDetail?<p>Selecione um evento.</p>:<>
       <p>Status: <strong>{manageDetail.event.status}</strong></p>
+      {isEventOwner&&manageDetail.event.status!=='cancelled'&&<form className="live-form" onSubmit={saveEvent}>
+        <h3>Editar evento</h3>
+        <label>Título <input required maxLength={140} value={editTitle} onChange={e=>setEditTitle(e.target.value)}/></label>
+        <label>Cidade <input required maxLength={140} value={editCity} onChange={e=>setEditCity(e.target.value)}/></label>
+        <label>Data e hora <input required type="datetime-local" value={editDate} onChange={e=>setEditDate(e.target.value)}/></label>
+        <label>Descrição <textarea rows={3} maxLength={2000} value={editDescription} onChange={e=>setEditDescription(e.target.value)}/></label>
+        <button type="submit" disabled={busy||!editDate}>Salvar alterações</button>
+      </form>}
       {isEventOwner&&manageDetail.event.status!=='cancelled'&&<form className="live-form" onSubmit={addLot}><h3>Novo lote</h3><label>Nome <input required value={newLotLabel} onChange={e=>setNewLotLabel(e.target.value)}/></label><label>Capacidade <input required type="number" min={1} value={newLotCapacity} onChange={e=>setNewLotCapacity(Number(e.target.value))}/></label><label>Preço fictício (centavos) <input required type="number" min={0} value={newLotPrice} onChange={e=>setNewLotPrice(Number(e.target.value))}/></label><button disabled={busy} type="submit">Criar lote</button></form>}
       <h3>Lotes</h3>{manageDetail.lots.map(l=><div className="live-listitem" key={l.id}><span><strong>{l.label}</strong><small>{l.issued} emitidos · {l.reserved} reservados · limite {l.capacity}</small></span><span>{money(l.price_cents)} · {l.status}</span>{isEventOwner&&manageDetail.event.status!=='cancelled'&&<button type="button" className="live-secondary" disabled={busy} onClick={()=>toggleLot(l)}>{l.status==='available'?'Pausar':'Reativar'}</button>}</div>)}
       {isEventOwner&&manageDetail.event.status==='draft'&&<button disabled={busy||!manageDetail.lots.length} onClick={()=>doManage('publish')}>Publicar evento</button>}
