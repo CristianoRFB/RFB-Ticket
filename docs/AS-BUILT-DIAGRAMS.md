@@ -96,7 +96,7 @@ stateDiagram-v2
   issuing --> issued: atomic_ticket_issuance
   held --> issued: direct_fake_confirm_batch
   issued --> refunded: fake_refund_no_checkin
-  held --> refunded: event_cancel_sandbox
+  held --> cancelled: event_cancel_sandbox
   issued --> refunded: event_cancel_sandbox
 ```
 
