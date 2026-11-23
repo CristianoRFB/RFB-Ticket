@@ -43,6 +43,19 @@ jobs:
           LOCAL_DB_ID="00000000-0000-4000-8000-000000000001"
           npx cf d1 migrations apply "$LOCAL_DB_ID" --local --dir ./migrations
           npx cf d1 raw "$LOCAL_DB_ID" --local --sql "SELECT COUNT(*) AS n FROM sqlite_master WHERE name='tickets'"
+  edge-d1-integration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Workerd + local D1 integration (no cloud account)
+        run: npm run test:workerd
   browser-demo:
     runs-on: ubuntu-latest
     permissions:
