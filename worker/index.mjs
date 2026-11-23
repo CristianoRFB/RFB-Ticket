@@ -110,7 +110,30 @@ export async function handleApi(request,env) {
       return ok({stats,financials:'sandbox_only',readOnly:true});
     }
 
-    const managerDetail=/^\/api\/manage\/events\/([^/]+)$/.exec(path);
+    // Organizer-only CSV export: ticket numbers and UTC timestamps, never QR
+    // secrets, buyer UID or fiscal UID. Explicit cap prevents unbounded reads.
+    const csvRoute=/^\\/api\\/events\\/([^/]+)\\/checkins\\.csv$/.exec(path);
+    if(method==='GET' && csvRoute){
+      const eventId=id(csvRoute[1]);
+      const owner=await env.DB.prepare('SELECT organizer_uid FROM events WHERE id=?').bind(eventId).first();
+      if(!owner||owner.organizer_uid!==user.uid)bad('NO_PERMISSION',403);
+      const records=await env.DB.prepare(`SELECT t.ticket_number,c.created_at
+        FROM checkins c JOIN tickets t ON t.id=c.ticket_id
+        WHERE c.event_id=? ORDER BY c.created_at ASC,t.ticket_number ASC LIMIT 5001`).bind(eventId).all();
+      const list=records.results||[];
+      if(list.length>5000)bad('REPORT_EXPORT_LIMIT',413);
+      const rows=['numero_ingresso,data_checkin_utc',...list.map(row=>
+        String(row.ticket_number)+','+new Date(Number(row.created_at)*1000).toISOString())];
+      return new Response('\\uFEFF'+rows.join('\\r\\n')+'\\r\\n',{
+        status:200,headers:{
+          'Content-Type':'text/csv; charset=utf-8',
+          'Content-Disposition':'attachment; filename="rfbticket-checkins-'+eventId+'.csv"',
+          'Cache-Control':'private, no-store',
+          'X-Content-Type-Options':'nosniff',
+        }
+      });
+    }
+    const managerDetail=/^\\/api\\/manage\\/events\\/([^/]+)$/.exec(path);
     if(method==='GET' && managerDetail) {
       const eventId=id(managerDetail[1]);
       await requireRole(env.DB,user.uid,eventId,['organizer','gate']);
