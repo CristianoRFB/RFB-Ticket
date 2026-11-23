@@ -15,7 +15,8 @@
     "deploy:dry": "cf deploy --dry-run",
     "deploy:sandbox": "cf deploy",
     "dev:demo": "vite --config vite.demo.config.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:workerd": "node --test tests/workerd.node-test.mjs"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -32,7 +33,8 @@
     "@types/react-dom": "^19.0.0",
     "cf": "^1.0.0-rc.2",
     "@cloudflare/vite-plugin": "^2.0.0-rc.0",
-    "@playwright/test": "^1.50.0"
+    "@playwright/test": "^1.50.0",
+    "miniflare": "^4.0.0"
   },
   "engines": {
     "node": ">=24.12.0"
