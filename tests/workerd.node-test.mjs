@@ -43,7 +43,7 @@ async function request(path,method='GET',payload,authorization) {
     method,headers,body:payload===undefined?undefined:JSON.stringify(payload)
   });
   const result=await response.json();
-  return {status:response.status,...result};
+  return {...result,status:response.status}; // Keep HTTP status separate from response business-status fields.
 }
 before(async()=>{
   mf=new Miniflare({
