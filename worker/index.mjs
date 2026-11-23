@@ -58,7 +58,12 @@ export async function handleApi(request,env) {
       const eventId=id(evDetail[1]);
       const event=await env.DB.prepare("SELECT id,title,description,city,starts_at,status FROM events WHERE id=? AND status='published'").bind(eventId).first();
       if(!event)bad('NOT_FOUND',404);
-      const lots=await env.DB.prepare("SELECT id,label,price_cents,capacity,issued,reserved,status FROM lots WHERE event_id=? ORDER BY price_cents").bind(eventId).all();
+      // Public availability is a read-only projection. Expired holds no longer appear sold out
+      // even before a subsequent write performs the physical sweep.
+      const lots=await env.DB.prepare(`SELECT l.id,l.label,l.price_cents,l.capacity,l.issued,l.status,
+        MAX(0,l.reserved-COALESCE((SELECT SUM(o.quantity) FROM orders o
+          WHERE o.lot_id=l.id AND o.status='held' AND o.hold_expires_at<=?),0)) AS reserved
+        FROM lots l WHERE l.event_id=? ORDER BY l.price_cents`).bind(now(),eventId).all();
       return ok({event,lots:(lots.results||[]).map(l=>({...l,available:Math.max(0,l.capacity-l.issued-l.reserved)}))});
     }
     // Signed, time-limited payment *simulation* callback from a fake provider.
@@ -150,14 +155,48 @@ export async function handleApi(request,env) {
       const result=await env.DB.prepare('SELECT DISTINCT e.id,e.title,e.status,e.city,e.starts_at FROM events e LEFT JOIN event_staff s ON s.event_id=e.id AND s.uid=? WHERE e.organizer_uid=? OR s.uid=? ORDER BY e.created_at DESC LIMIT 100').bind(user.uid,user.uid,user.uid).all();
       return ok({events:result.results||[]});
     }
-    const manage=/^\/api\/events\/([^/]+)\/(lots|publish|staff|stats|audit|checkins)$/.exec(path);
+    // Revoke a lost or compromised gate account without allowing cross-event access.
+    const staffRemoval=/^\/api\/events\/([^/]+)\/staff\/([^/]+)$/.exec(path);
+    if(method==='DELETE' && staffRemoval){
+      const eventId=id(staffRemoval[1]),targetUid=str(decodeURIComponent(staffRemoval[2]),128);
+      await requireRole(env.DB,user.uid,eventId);
+      const removed=await env.DB.prepare("DELETE FROM event_staff WHERE event_id=? AND uid=? AND role='gate'").bind(eventId,targetUid).run();
+      if(!removed.meta?.changes)bad('STAFF_NOT_FOUND',404);
+      await audit(env.DB,eventId,user.uid,'GATE_REVOKED',targetUid);
+      return ok({revoked:true,uid:targetUid});
+    }
+    const manage=/^\/api\/events\/([^/]+)\/(lots|publish|staff|stats|audit|checkins|cancel)$/.exec(path);
     if(manage){
       const eventId=id(manage[1]),operation=manage[2];
+      if(operation==='cancel' && method==='POST') {
+        await requireRole(env.DB,user.uid,eventId);
+        // A cancellation is forbidden after any successful admission. One D1 batch
+        // makes status, held orders, issued tickets and inventory agree atomically.
+        const changed=await env.DB.batch([
+          env.DB.prepare(`UPDATE events SET status='cancelled' WHERE id=? AND organizer_uid=?
+            AND status IN ('draft','published') AND NOT EXISTS(SELECT 1 FROM checkins WHERE event_id=?)`).bind(eventId,user.uid,eventId),
+          env.DB.prepare(`UPDATE orders SET status=CASE WHEN status='held' THEN 'cancelled'
+            WHEN status='issued' THEN 'refunded' ELSE status END
+            WHERE event_id=? AND status IN ('held','issued')
+            AND EXISTS(SELECT 1 FROM events WHERE id=? AND status='cancelled')`).bind(eventId,eventId),
+          env.DB.prepare(`UPDATE tickets SET status='revoked',token_version=token_version+1
+            WHERE event_id=? AND status='issued'
+            AND EXISTS(SELECT 1 FROM events WHERE id=? AND status='cancelled')`).bind(eventId,eventId),
+          env.DB.prepare(`UPDATE lots SET reserved=0 WHERE event_id=?
+            AND EXISTS(SELECT 1 FROM events WHERE id=? AND status='cancelled')`).bind(eventId,eventId),
+        ]);
+        if(!changed[0]?.meta?.changes)bad('EVENT_CANCELLATION_DENIED',409);
+        await audit(env.DB,eventId,user.uid,'EVENT_CANCELLED_SANDBOX',eventId);
+        return ok({status:'cancelled',refunds:'simulated_only',moneyReturned:false});
+      }
       if(operation==='lots' && method==='POST') {
         await requireRole(env.DB,user.uid,eventId);
         const p=await body(request),lotId=crypto.randomUUID();
         const name=str(p.label),capacity=integer(p.capacity,1,1000000),price=integer(p.priceCents,0,100000000);
-        await env.DB.prepare("INSERT INTO lots(id,event_id,label,capacity,price_cents,status) VALUES(?,?,?,?,?,'available')").bind(lotId,eventId,name,capacity,price).run();
+        const inserted=await env.DB.prepare(`INSERT INTO lots(id,event_id,label,capacity,price_cents,status)
+          SELECT ?,e.id,?,?,?,'available' FROM events e
+          WHERE e.id=? AND e.status IN ('draft','published')`).bind(lotId,name,capacity,price,eventId).run();
+        if(!inserted.meta?.changes)bad('INVALID_EVENT_STATE',409);
         await audit(env.DB,eventId,user.uid,'LOT_CREATED',lotId);
         return ok({lotId},201);
       }
@@ -218,7 +257,9 @@ export async function handleApi(request,env) {
       return ok({order,sandbox:true},201);
     }
     if(method==='GET' && path==='/api/orders'){
-      const result=await env.DB.prepare('SELECT id,event_id,lot_id,quantity,amount_cents,status,hold_expires_at,created_at FROM orders WHERE buyer_uid=? ORDER BY created_at DESC LIMIT 100').bind(user.uid).all();
+      const result=await env.DB.prepare(`SELECT id,event_id,lot_id,quantity,amount_cents,
+        CASE WHEN status='held' AND hold_expires_at<=? THEN 'expired' ELSE status END AS status,
+        hold_expires_at,created_at FROM orders WHERE buyer_uid=? ORDER BY created_at DESC LIMIT 100`).bind(now(),user.uid).all();
       return ok({orders:result.results||[]});
     }
     const orderAct=/^\/api\/orders\/([^/]+)\/(sandbox-confirm|cancel|refund)$/.exec(path);
