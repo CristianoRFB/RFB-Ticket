@@ -61,7 +61,7 @@ before(async()=>{
   await mf.ready;
   db=await mf.getD1Database('DB');
   const schema=readFileSync(new URL('../migrations/0001_init.sql',import.meta.url),'utf8')
-    .split('\\n').filter(line=>!line.trimStart().startsWith('--')).join('\\n');
+    .split('\n').filter(line=>!line.trimStart().startsWith('--')).join('\n');
   await db.exec(schema);
 });
 after(async()=>{if(mf)await mf.dispose();});
