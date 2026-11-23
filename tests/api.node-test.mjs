@@ -214,4 +214,68 @@ test('administrator dashboard is read-only and granted only by trusted backend c
  delete env.ADMIN_UID;
  assert.equal((await api('/api/admin/summary','GET',null,admin)).httpStatus,403);
 });
+
+test('expired holds are projected read-only as available before a new reservation',async()=>{
+ const ev=await api('/api/events','POST',{title:'Projeção de estoque',city:'Jales',startsAt:'2027-05-01T20:00:00Z'},a);
+ const lot=await api('/api/events/'+ev.eventId+'/lots','POST',{label:'Único',capacity:1,priceCents:499},a);
+ await api('/api/events/'+ev.eventId+'/publish','POST',{},a);
+ const hold=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},b);
+ assert.equal(hold.httpStatus,201);
+ assert.equal((await api('/api/events/'+ev.eventId)).lots[0].available,0);
+ db.prepare('UPDATE orders SET hold_expires_at=? WHERE id=?').run(1,hold.order.id);
+ const publicView=await api('/api/events/'+ev.eventId);
+ assert.equal(publicView.lots[0].reserved,0);
+ assert.equal(publicView.lots[0].available,1);
+ const myOrders=await api('/api/orders','GET',null,b);
+ assert.equal(myOrders.orders.find(o=>o.id===hold.order.id).status,'expired');
+ assert.equal(db.prepare('SELECT status FROM orders WHERE id=?').get(hold.order.id).status,'held');
+ const fresh=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},c);
+ assert.equal(fresh.httpStatus,201);
+ assert.equal((await api('/api/events/'+ev.eventId)).lots[0].available,0);
+});
+test('only organizer can revoke gate, and revocation takes effect at next scan',async()=>{
+ const lot=await api('/api/events/'+eventId+'/lots','POST',{label:'Revogação fiscal',capacity:1,priceCents:0},a);
+ const hold=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},b);
+ const issued=await api('/api/orders/'+hold.order.id+'/sandbox-confirm','POST',{},b);
+ const signed=issued.tickets[0].token;
+ const target='/api/events/'+eventId+'/staff/gate-d';
+ assert.equal((await api(target,'DELETE',null,b)).httpStatus,403);
+ const revoked=await api(target,'DELETE',null,a);
+ assert.equal(revoked.revoked,true);
+ assert.equal((await api('/api/checkin','POST',{eventId,token:signed,requestId:randomUUID()},gate)).httpStatus,403);
+ assert.equal((await api('/api/checkin','POST',{eventId,token:signed,requestId:randomUUID()},a)).result,'OK');
+ assert.equal((await api(target,'DELETE',null,a)).httpStatus,404);
+ assert.equal((await api('/api/events/'+eventId+'/staff','POST',{uid:'gate-d'},a)).httpStatus,200);
+ const report=await api('/api/events/'+eventId+'/audit','GET',null,a);
+ assert.ok(report.audit.some(row=>row.action==='GATE_REVOKED'));
+});
+test('cancel event revokes all issued tickets, releases holds, and blocks new lots',async()=>{
+ const ev=await api('/api/events','POST',{title:'Evento cancelável',city:'Jales',startsAt:'2027-07-01T20:00:00Z'},a);
+ const lot=await api('/api/events/'+ev.eventId+'/lots','POST',{label:'Lote simples',capacity:2,priceCents:1900},a);
+ await api('/api/events/'+ev.eventId+'/publish','POST',{},a);
+ const paid=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},b);
+ const issued=await api('/api/orders/'+paid.order.id+'/sandbox-confirm','POST',{},b);
+ const held=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},c);
+ assert.equal((await api('/api/events/'+ev.eventId+'/cancel','POST',{},c)).httpStatus,403);
+ const cancelled=await api('/api/events/'+ev.eventId+'/cancel','POST',{},a);
+ assert.equal(cancelled.status,'cancelled');assert.equal(cancelled.moneyReturned,false);
+ assert.equal((await api('/api/events/'+ev.eventId)).httpStatus,404);
+ assert.equal((await api('/api/events/'+ev.eventId+'/cancel','POST',{},a)).httpStatus,409);
+ assert.equal((await api('/api/events/'+ev.eventId+'/lots','POST',{label:'Tardio',capacity:1,priceCents:0},a)).httpStatus,409);
+ const bOrders=await api('/api/orders','GET',null,b);
+ assert.equal(bOrders.orders.find(x=>x.id===paid.order.id).status,'refunded');
+ const cOrders=await api('/api/orders','GET',null,c);
+ assert.equal(cOrders.orders.find(x=>x.id===held.order.id).status,'cancelled');
+ const updated=(await api('/api/tickets','GET',null,b)).tickets.find(x=>x.id===issued.tickets[0].id);
+ assert.equal(updated.status,'revoked');assert.equal(updated.token,null);
+ assert.equal((await api('/api/checkin','POST',{eventId:ev.eventId,token:issued.tickets[0].token,requestId:randomUUID()},a)).error,'INVALID_TICKET');
+ const sums=db.prepare('SELECT reserved,issued FROM lots WHERE id=?').get(lot.lotId);
+ assert.equal(sums.reserved,0);assert.equal(sums.issued,1);
+});
+test('organizer cannot cancel an event after its first successful admission',async()=>{
+ assert.equal((await api('/api/events/'+eventId+'/cancel','POST',{},a)).error,'EVENT_CANCELLATION_DENIED');
+ const manage=await api('/api/manage/events/'+eventId,'GET',null,a);
+ assert.equal(manage.event.status,'published');
+});
+
 after(()=>{globalThis.fetch=originalFetch;db.close();});
