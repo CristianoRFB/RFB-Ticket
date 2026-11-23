@@ -300,4 +300,23 @@ test('F09 owner-only CSV export contains no buyer UID, fiscal UID or QR secret',
  assert.equal((await handleApi(new Request(url),env)).status,401);
 });
 
+
+test('five active holds per buyer are capped atomically, cancellation frees a slot',async()=>{
+ const event=await api('/api/events','POST',{title:'Proteção de reserva',city:'Jales',startsAt:'2027-10-30T20:00:00Z'},a);
+ const lot=await api('/api/events/'+event.eventId+'/lots','POST',{label:'Lote antiabuso',capacity:8,priceCents:0},a);
+ await api('/api/events/'+event.eventId+'/publish','POST',{},a);
+ const actor=token('buyer-rate-limited'),held=[];
+ for(let n=0;n<5;n++){
+   const response=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},actor);
+   assert.equal(response.httpStatus,201);held.push(response.order.id);
+ }
+ const blocked=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},actor);
+ assert.equal(blocked.httpStatus,429);assert.equal(blocked.error,'ACTIVE_HOLD_LIMIT');
+ assert.equal((await api('/api/events/'+event.eventId)).lots[0].reserved,5);
+ assert.equal((await api('/api/orders/'+held[0]+'/cancel','POST',{},actor)).httpStatus,200);
+ const retry=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},actor);
+ assert.equal(retry.httpStatus,201);
+ assert.equal((await api('/api/events/'+event.eventId)).lots[0].reserved,5);
+});
+
 after(()=>{globalThis.fetch=originalFetch;db.close();});
