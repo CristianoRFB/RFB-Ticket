@@ -1,30 +1,28 @@
-# HANDOFF — RFBTicket / RFB Method GPT
+# HANDOFF — RFBTicket (RFB Method GPT)
 
-Data do turno: 2026-11-22 BRT. Operação restrita ao repositório CristianoRFB/RFB-Ticket.
-PR canônico: https://github.com/CristianoRFB/RFB-Ticket/pull/1 (Draft).
-Branch: feature/rfb-starter-pack-v1; default main intacta, nenhum merge ou deploy.
+Data 2026-11-22 BRT. Repositório-alvo único: CristianoRFB/RFB-Ticket, público. Principal main preservada.
+PR ativo: https://github.com/CristianoRFB/RFB-Ticket/pull/1 — DRAFT.
+Branch: feature/rfb-starter-pack-v1.
+HEAD verificada antes deste checkpoint: d215759a1a02923b5d1b2d43d4b6544700323249. Leia PROJECT_STATUS.json para estado canônico; docs/rfb/PROGRESS.md e GITHUB-TRIAGE.md são derivados.
 
-## Trabalho deste turno
+## Commits relevantes
+- fd549595359f792d64f12ecc35767dfdea57e442 — domínio F01/F02 e cinco testes nativos.
+- f45d44316004ae8be5adf37f624b8968c678dbde — UI local de eventos e lotes com disponibilidade fictícia.
+- 46efe37eebee859fa8d23dd9c33412cdbd361178 — segurança, arquitetura check-in e QA registrado.
+- d215759a1a02923b5d1b2d43d4b6544700323249 — pesquisa UX/concorrentes e auditoria diagramas/telas.
 
-- S001 triagem GitHub, documentação e baseline do scaffold G1.
-- S002 código de domínio sintético F01/F02 e teste nativo Node com 5 casos PASS.
-- UI local de catálogo, escolha de evento e lotes, preços fictícios, bloqueio ilustrativo de indisponível, seleção de quantidade e reservas de sessão.
-- Plano de estoque e check-in atomicamente validável: docs/TRANSACTIONAL-CHECKIN-PLAN.md.
-- QA executado vs NOT_RUN em docs/QA-REPORT-2026-11-22.md.
-- Fonte de verdade de estado: PROJECT_STATUS.json; docs/rfb/PROGRESS.md é resumo derivado. SCAFFOLD-STATUS.json permanece registro legado G1, não é checkpoint vigente.
+## Testes de fato
+PASS: Node 22.16.0 --experimental-strip-types --test tests/ticketDomain.node-test.mjs (5/5); tsc 5.8.3 strict isolado domínio; sintaxe TSX local.
+NOT_RUN: npm install, Vitest, build Vite e typecheck do aplicativo completo, Playwright browser/desktop/mobile, Firebase Emulator, Rules auth, scanner e CI.
+Ambiente sem DNS externo para git clone/npm; conector GitHub possibilitou commit, não forneceu checkout terminal íntegro.
 
-## Segurança/custo
+## Operações não realizadas
+Nenhum merge, deploy, criação de Worker/Firebase, usuário real, credencial verdadeira, pagamento nem edição de outros produtos RFB ou myown.
 
-Sem Firestore conectado, sem Cloudflare criado, sem dados reais, sem pagamentos, sem usuários e sem credencial QR. Nenhuma conta/serviço pago. A demo não dá direito de entrada. Custo adicional realizado R$0.
-Não copiar PNG do ZIP sem licença; manter PR draft.
-
-## Próxima fatia iniciável
-
-1. Consultar HEAD atual do PR #1 e PROJECT_STATUS.json; conferir todas Issues/PRs/checks.
-2. Fazer npm install + test:domain, typecheck, test, build em checkout real com rede. Corrigir erro com teste focado e AntiLoop.
-3. Testar UI real em navegador desktop/mobile (T029–T033, teclado, fila de lotes).
-4. Revisar matriz de papéis, entidade Edicao e política de capacidade/hold; implementar exclusivamente no Firebase Emulator o modelo de lote e reservas com duas operações concorrentes.
-5. Em seguida, check-in de uso único com teste de duas leituras simultâneas, sem câmera/pagamento/produção.
-6. Atualizar checkpoint, docs e PR existente. Não fazer merge ou deploy sem gates.
-
-Rollback seguro: reverter commits adicionados ao PR draft em branch, preservando main. Não editar RFB Method / myown por padrão.
+## Próxima ação segura (rfb:resume + rfb:develop)
+1. Ler HEAD do PR #1, issues e reviews/checks e conferir checkpoint com HEAD.
+2. Rodar instalação/testes/build da branch em executor com rede; corrigir defeitos reais.
+3. Validar UI em browser e documentar screenshots reais com branch+SHA.
+4. Especificar matriz de papéis e modelo Evento/Edicao/Lote, então implementar uma única transação de reserva no Firestore Emulator e testar duas requisições concorrentes / negações de tenant.
+5. Implementar check-in QR referenciado/atômico somente após o modelo/Rules/contratos; o documento TRANSACTIONAL-CHECKIN-PLAN.md é plano, não prova.
+6. Atualizar PR #1 e checkpoints, manter draft até cumprir gates.

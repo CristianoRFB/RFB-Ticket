@@ -1,21 +1,29 @@
-# RFB-Ticket — PROGRESS (snapshot 22/11/2026 BRT)
+# RFBTicket — PROGRESS | checkpoint pós S002
 
-Canonical state: ../.. / PROJECT_STATUS.json (root); do not infer production from this file.
+Fonte única: PROJECT_STATUS.json (raiz). Estado validado sobre PR #1 draft. Data local 2026-11-22.
 
-## S001 — baseline and triage
-- Confirmed default main at dbd16775e4b4f47a855fd67a736294421ee1f6b9.
-- Draft PR #1 on feature/rfb-starter-pack-v1, initial HEAD 283535b06a2581269e89ef2a8a115c63802758a5. Open Issues: 0. Open PRs: 1.
-- PR comments/reviews/threads: none. Status/check runs and PR-triggered workflows: none observed.
-- Baseline contains 7 draft diagrams, T001–T058 textual catalog, React/Vite illustrative scaffold. Full npm/Playwright/CI: NOT_RUN.
+## S001 (triagem) — concluído como diagnóstico
+- Repositório público CristianoRFB/RFB-Ticket; main inicial dbd16775e4b4f47a855fd67a736294421ee1f6b9.
+- PR #1 draft / feature/rfb-starter-pack-v1, nenhum PR concorrente.
+- Consultas antes e depois: 0 Issues abertas, 1 PR aberto (o #1). Sem comentários, reviews, threads ou checks observados. Nenhum encerramento.
+- Starter Pack fonte, 7 diagramas e catálogo T001–T058 revisados. Lacunas documentadas em docs/DIAGRAM-AND-SCREEN-AUDIT.md.
 
-## S002 — first code slice, WORK IN PROGRESS
-- Published domain and fixtures in commit fd549595359f792d64f12ecc35767dfdea57e442.
-- F01 publication filter, F02 lot limits, event/lot mismatch validation; all run with synthetic inputs.
-- Node.js 22.16.0 test: PASS 5/5 (local machine container); standalone TypeScript 5.8.3 strict check: PASS for domain files.
-- These are NOT real reservations, multi-session transactions or Firebase authorization.
-- Next: wire actual event/lot selection into UI; verify types/build when dependencies available. Do not merge draft or deploy.
+## S002 (F01/F02) — código demonstrativo implementado; QA completo pendente
+- Commit domínio fd549595359f792d64f12ecc35767dfdea57e442: modelos, fixtures e reserva sintética.
+- Commit frontend f45d44316004ae8be5adf37f624b8968c678dbde: catálogo, escolha de evento e lote, valor fictício, validação de estoque LOCAL e reinício.
+- Cinco testes nativos Node 22.16 PASS; TypeScript 5.8 strict isolado PASS, transpile sintático de App local PASS.
+- NÃO foram rodados npm install, typecheck completo, npm run test(Vitest), build Vite, browser/Playwright, Firestore Emulator ou CI.
+- ATENÇÃO: simulação local não garante estoque nem autorização real; todos AC-01..AC-12 ainda pendentes de aceite completo.
+- Docs de arquitetura, mercado e segurança: docs/TRANSACTIONAL-CHECKIN-PLAN.md e docs/MARKET-AND-UX-RESEARCH.md.
+- Não há checkout real, QR, pagamento, emissão, permissão inter-tenant servidor, webhook ou check-in atômico.
 
-## Risk and cost
-- AV-02/03/05/08/14: all real backend, tenant access checks, payments, webhooks, check-in and atomicity BLOCKED_PENDING_IMPLEMENTATION.
-- No Cloudflare/Firebase resource changed; incremental recurring expense R$0 this round.
-- Rollback: revert commit fd549595... on existing draft branch, not main.
+## S003/S004 — próxima fatia objetiva
+1. Em checkout real conectado, npm install, test:domain, typecheck, test, build; corrigir bugs com anti-loop.
+2. QA manual/Playwright de Eventos e Lotes com teclado, reduced-motion, tamanhos mobile e desktop, capturas reais.
+3. Escolher modelo de dados/roles validado em Firestore Emulator; implementar transação de hold por lote e teste concorrente da última vaga.
+4. Depois, check-in com QR opaco e primeira validação única transacional, teste duas portas e novo requestId. Nada de produção sem autorização.
+
+## Custos e gates
+R$0 em novos recursos criados; Firebase/Cloudflare não conectados nem implantados. Preços e limites Free consultados em documentação oficial em 22/11; plano efetivo de cada conta: NÃO VERIFICADO. PR segue draft e NÃO deve sofrer merge.
+
+Rollback: reverter commits da branch draft. Nunca forçar main nem editar o método-mãe/myown automaticamente.

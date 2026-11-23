@@ -1,14 +1,11 @@
-# RFBTicket — Github triage | 2026-11-22 BRT
+# RFBTicket — GITHUB TRIAGE, pós execução
 
-Alvo exclusivo: https://github.com/CristianoRFB/RFB-Ticket (público).
-Default main inicial SHA dbd16775e4b4f47a855fd67a736294421ee1f6b9.
-Branch de trabalho existente: feature/rfb-starter-pack-v1.
-PR aberto: #1 https://github.com/CristianoRFB/RFB-Ticket/pull/1 (DRAFT, base main, head inicial 283535b06a2581269e89ef2a8a115c63802758a5).
-Busca GitHub de Issues abertas (is:issue): 0. Busca PRs abertos (is:pr): 1. Limite 100 por busca; lista exaustiva porque cada pesquisa retornou menos de 100.
-Comentários na PR #1: 0; reviews: 0; threads: 0. Combined statuses: 0; Check Runs: 0; PR workflow runs: 0, na SHA inicial.
-Categoria do PR #1: OPEN_ACTIONABLE / IMPLEMENTED_UNVERIFIED, não pronto para merge.
-Não existem Issues independentes abertas para fechar. PR #1 mantido OPEN_DRAFT.
-Documentação/UX com estado histórico desatualizado foi identificada; checkpoint canônico será PROJECT_STATUS.json.
-Diferenciação obrigatória: código de domínio testado em Node NÃO equivale a app buildada, browser testado ou backend real.
-Reconsultar PR, SHA, Reviews, Issues e checks no próximo início e ANTES de fechar.
-Responsável operacional do turno: ChatGPT, papéis DEV/QA/SECURITY assumidos na sessão; não houve QA humano independente.
+Data da rodada: 2026-11-22 BRT; alvo público CristianoRFB/RFB-Ticket.
+Baseline main SHA dbd16775e4b4f47a855fd67a736294421ee1f6b9; última HEAD verificada antes do checkpoint d215759a1a02923b5d1b2d43d4b6544700323249.
+Branch PR #1: feature/rfb-starter-pack-v1 -> main; estado OPEN_DRAFT; merge não executado.
+Busca open is:issue = 0. Busca open is:pr = 1. Cada busca topn 100 retornou menos de 100; nenhuma paginação adicional necessária.
+PR #1 tinha 0 reviews, 0 comentários e 0 threads ao iniciar. Nenhum CI check observado na SHA baseline. Na SHA d215759a1a02923b5d1b2d43d4b6544700323249: combined statuses [] e check_runs total_count 0.
+Classificação: OPEN_ACTIONABLE / IMPLEMENTED_UNVERIFIED, mantido aberto. Não há issue independente para fechar; nenhum recurso externo alterado.
+S001 – baseline & inventário; S002 – demo local F01/F02 e plano transacional. Check-in real e verificação de duas entradas permanecem NÃO IMPLEMENTADOS.
+Permanecem abertos: build, QA navegador, concorrência, roles, Firebase Rules e validação humana; não há base para merge nem fechamento.
+Na retomada, verificar novo HEAD/checks/comentários/Issues/PRs. Registro é instantâneo da rodada, não monitoramento assíncrono.

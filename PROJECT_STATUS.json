@@ -2,30 +2,64 @@
   "schema_version": 2,
   "product": "RFBTicket",
   "repository": "CristianoRFB/RFB-Ticket",
+  "checkpoint_format": "RFB Method GPT",
   "canonical_checkpoint": "PROJECT_STATUS.json",
-  "stage": "G1_SCAFFOLD_G2_DOMAIN_IN_PROGRESS",
+  "checkpoint_basis_sha": "d215759a1a02923b5d1b2d43d4b6544700323249",
   "branch": "feature/rfb-starter-pack-v1",
-  "last_code_commit": "fd549595359f792d64f12ecc35767dfdea57e442",
+  "default_branch": "main",
+  "main_baseline_sha": "dbd16775e4b4f47a855fd67a736294421ee1f6b9",
+  "draft_pr": 1,
   "source_method_pr": 4,
-  "source_slug": "11-rfbticket",
+  "stage": "G2_LOCAL_DEMO_IMPLEMENTED_UNVERIFIED",
   "source_imported": true,
-  "domain": "SYNTHETIC_CLIENT_ONLY",
-  "frontend": "ILLUSTRATIVE_UI_PENDING_UPDATE",
+  "scope": {
+    "F01": "LOCAL_DEMO_ONLY",
+    "F02": "LOCAL_DEMO_ONLY",
+    "F03_to_F12": "NOT_IMPLEMENTED",
+    "T001_to_T058": "DOCUMENTED_NOT_ALL_IMPLEMENTED",
+    "D001_to_D007": "DRAFT_AUDITED_NOT_HOMOLOGATED"
+  },
+  "code_commits": {
+    "domain": "fd549595359f792d64f12ecc35767dfdea57e442",
+    "ui": "f45d44316004ae8be5adf37f624b8968c678dbde",
+    "docs": "d215759a1a02923b5d1b2d43d4b6544700323249"
+  },
+  "frontend": "INTERACTIVE_SYNTHETIC_SESSION_ONLY",
   "backend": "NOT_IMPLEMENTED",
+  "firebase": "NOT_CONFIGURED",
+  "cloudflare": "NOT_CONFIGURED",
+  "authorization": "NOT_IMPLEMENTED",
+  "atomic_checkin": "PLANNED_NOT_IMPLEMENTED",
   "real_payments": false,
   "real_tickets": false,
-  "real_checkin": false,
   "production": false,
+  "deploy": "NOT_RUN",
   "tests": {
-    "local_node_domain": "PASS_5_OF_5",
-    "local_domain_typecheck": "PASS_TSC_5_8_3",
+    "node_domain": "PASS_5_OF_5_NODE_22_16",
+    "domain_typecheck": "PASS_TYPESCRIPT_5_8_3_ONLY",
+    "tsx_syntax_transpile": "PASS_LOCAL_SYNTAX_ONLY",
     "full_project_typecheck": "NOT_RUN",
     "vitest": "NOT_RUN",
     "vite_build": "NOT_RUN",
     "browser_qa": "NOT_RUN",
-    "ci": "NONE"
+    "firebase_emulator": "NOT_RUN",
+    "ci": "NO_CHECK_RUNS"
   },
-  "reason_full_tests_not_run": "No npm dependency installation: sandbox cannot resolve github.com and dependencies not available; project build remains unverified",
-  "next_action": "Integrate catalog + lot selection UI in current draft PR, then plan transactional Firestore check-in and update checkpoints",
-  "cost": "NO_NEW_SERVICES_CREATED; R$0 added; pricing and live quotas NOT_VERIFIED"
+  "blockers": [
+    "npm dependencies unavailable offline; sandbox cannot resolve github.com",
+    "not a full git checkout; no app browser QA",
+    "no Firestore Emulator/auth/schema/rules or deployed provider configured",
+    "tenant isolation and one-use check-in require real server transaction tests",
+    "all 12 original AC remain not fully accepted"
+  ],
+  "github_triage": {
+    "open_issues": 0,
+    "open_prs": 1,
+    "pr1": "OPEN_DRAFT_KEEP_OPEN",
+    "checks_on_basis_sha": 0
+  },
+  "expense": "R$0 incremental resources and charges created this session",
+  "cost_research": "Official Firebase Spark/Cloudflare Free docs reviewed 2026-11-22; live account plans and future quotas not confirmed",
+  "next_action": "Run npm install, test:domain, typecheck, test, build and real browser QA on the draft branch; then build Firestore Emulator reservations with concurrency/tenant-negative tests before production check-in.",
+  "myown": "NOT_RUN_NO_METHOD_EDITS"
 }
