@@ -62,7 +62,12 @@ before(async()=>{
   db=await mf.getD1Database('DB');
   const schema=readFileSync(new URL('../migrations/0001_init.sql',import.meta.url),'utf8')
     .split('\n').filter(line=>!line.trimStart().startsWith('--')).join('\n');
-  await db.exec(schema);
+  // D1.exec() parses a line-oriented command stream; each multiline DDL
+  // statement is instead prepared independently, preserving the SQL schema.
+  for(const statement of schema.split(';').map(s=>s.trim()).filter(Boolean)){
+    if(statement.startsWith('PRAGMA'))continue; // foreign_keys already enabled by D1.
+    await db.prepare(statement).run();
+  }
 });
 after(async()=>{if(mf)await mf.dispose();});
 
