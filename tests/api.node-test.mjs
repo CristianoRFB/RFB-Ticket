@@ -285,4 +285,19 @@ test('organizer cannot cancel an event after its first successful admission',asy
  assert.equal(manage.event.status,'published');
 });
 
+
+test('F09 owner-only CSV export contains no buyer UID, fiscal UID or QR secret',async()=>{
+ const url='https://rfb.example/api/events/'+eventId+'/checkins.csv';
+ const allowed=await handleApi(new Request(url,{headers:{Authorization:'Bearer '+a}}),env);
+ assert.equal(allowed.status,200);
+ assert.match(allowed.headers.get('content-type')||'',/text\/csv/);
+ assert.match(allowed.headers.get('content-disposition')||'',/attachment/);
+ const csv=await allowed.text();
+ assert.ok(csv.includes('numero_ingresso,data_checkin_utc'));
+ assert.match(csv,/2026-|2027-/);
+ assert.ok(!csv.includes('buyer-b')&&!csv.includes('gate-d'));
+ assert.equal((await handleApi(new Request(url,{headers:{Authorization:'Bearer '+b}}),env)).status,403);
+ assert.equal((await handleApi(new Request(url),env)).status,401);
+});
+
 after(()=>{globalThis.fetch=originalFetch;db.close();});
