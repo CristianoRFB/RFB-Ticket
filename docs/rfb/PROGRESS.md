@@ -29,3 +29,8 @@ Nenhuma credencial, PII real, conta de cobrança, deploy ou merge. D1 Free e Wor
 - Migracao 0001 revisada para ticket_number INTEGER PRIMARY KEY AUTOINCREMENT; id QR continua UUID UNIQUE.
 - Rotas /api/tickets e emission retornam ticket_number, UI mostra #000001 etc. Node SQLite PASS 9/9.
 - Somente banco novo vazio; não rodar migração sobre banco existente sem plano/backup.
+
+## S005 — webhook HMAC de provedor fictício (parcial)
+- Nova rota pública POST /api/webhooks/sandbox requer SANDBOX_MODE + SANDBOX_WEBHOOK_SECRET Worker, HMAC SHA256 do corpo e timestamp (janela de 5min). Registra sandbox_webhooks com idempotência e emite ingressos em transação SQL D1 somente com pedido reservado.
+- SQLite mock testes de assinatura inválida, stale, tamper, replay e 1 emissão: Node 10/10 PASS. Não foi usado provedor de pagamentos real. Cliente ainda consegue confirmar ficticiamente sob SANDBOX_MODE, portanto F05 REAL continua incompleta.
+- PR #1 draft. Commit F03 221c685... passou 6/6 checks GitHub Actions; novo webhook deve passar CI antes de marcar verificado.

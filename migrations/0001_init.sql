@@ -29,6 +29,10 @@ CREATE TABLE IF NOT EXISTS orders (
  request_key TEXT NOT NULL, created_at INTEGER NOT NULL,
  UNIQUE(buyer_uid, request_key)
 );
+CREATE TABLE IF NOT EXISTS sandbox_webhooks (
+ id TEXT PRIMARY KEY, order_id TEXT NOT NULL REFERENCES orders(id), received_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_webhooks_order ON sandbox_webhooks(order_id);
 CREATE TABLE IF NOT EXISTS tickets (
  ticket_number INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, order_id TEXT NOT NULL REFERENCES orders(id),
  event_id TEXT NOT NULL REFERENCES events(id), owner_uid TEXT NOT NULL,

@@ -13,16 +13,16 @@
   "verified_completion_percent": null,
   "features_code": "F01/F02/F04_fake/F06/F07/F08/F09/F10_fake/F11/F12 partial; see docs/ACCEPTANCE-MATRIX.md",
   "major_missing": [
-    "F05 verified payment provider sandbox webhook",
     "Cloudflare D1 integration test with actual binding",
     "Firebase project/auth configuration and cross-tenant live testing",
     "T001-T058 screen coverage and approved assets",
     "Production monitoring/rate limits/backups/rollback rehearsed",
     "Browser QA of authenticated sandbox against real isolated Firebase/D1 not executed",
-    "Mobile physical-device camera permission and poor-network QA not executed"
+    "Mobile physical-device camera permission and poor-network QA not executed",
+    "Real payment-provider sandbox webhook remains unintegrated; mock HMAC webhook only, old client fake confirm bypass still sandbox-only"
   ],
   "tests": {
-    "local_backend_node_sqlite": "PASS_9_OF_9",
+    "local_backend_node_sqlite": "PASS_10_OF_10",
     "local_domain": "PASS_5_OF_5",
     "github_ci_prior_commit_6a6f": "PASS_4_OF_4",
     "github_backend_3370": "PASS_2_OF_2",
@@ -32,7 +32,8 @@
     "live_firebase": "NOT_RUN",
     "payments": "FAKE_ONLY",
     "github_ci_40737": "PASS_6_OF_6",
-    "github_ci_post_node24": "BACKEND_FRONTEND_PASS_BROWSER_PENDING_ON_PREVIOUS_D6CD_HEAD"
+    "github_ci_post_node24": "PASS_6_OF_6_PRE_WEBHOOK",
+    "github_ci_F03_221c": "PASS_6_OF_6"
   },
   "cloudflare": {
     "account_read_only_audited": true,
@@ -48,10 +49,10 @@
   "production": false,
   "no_merge": true,
   "no_billing": true,
-  "next_action": "Check GitHub CI for F03 and Node24, then configure isolated D1/Firebase staging without changing other projects; execute actual auth/atomic checkin concurrency and camera QA.",
+  "next_action": "Verify GitHub CI signed fake webhook. Provision isolated D1 and Firebase only with approved account/quotas; run real live transaction and webhook/portaria E2E before any claim of 90%.",
   "scope_details": {
     "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
-    "F05_webhook": "NOT_IMPLEMENTED",
+    "F05_webhook": "FAKE_PROVIDER_SIGNED_WEBHOOK_IMPLEMENTED_LOCAL_NO_REAL_GATEWAY",
     "API_routes": "SANDBOX_ONLY"
   }
 }

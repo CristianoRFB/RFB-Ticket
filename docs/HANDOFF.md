@@ -16,3 +16,7 @@ Implementado em código: eventos/lotes, reserva SQL transacional, buyer idempote
 
 ## F03 numeração (novo slice)
 - Tickets: ticket_number autoincremental global e UUID único para QR, números exibidos na UI. Node SQLite 9/9 PASS, CI no commit futuro ainda verificar. Schema 0001 destina-se a DB novo; NÃO migrar banco de produção.
+
+## Webhook assinado simulado S005
+- worker/webhook.mjs + /api/webhooks/sandbox assinam e verificam callbacks fictícios com segredo SANDBOX_WEBHOOK_SECRET e evento idempotente sandbox_webhooks. Node SQLite 10/10 PASS. NÃO equivale a Mercado Pago/Stripe ou outro integrador; nenhum webhook/PIX real e nenhuma cobrança.
+- Config cloudflare agora exige dois Worker secrets sem versionar; criar ambiente isolado apenas com permissão e quotas Free verificadas.

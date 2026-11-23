@@ -28,6 +28,7 @@ export default defineConfig({
       FIREBASE_PROJECT_ID: bindings.text('REPLACE_WITH_SANDBOX_PROJECT_ID'),
       SANDBOX_MODE: bindings.text('true'),
       TICKET_SIGNING_SECRET: bindings.secret('TICKET_SIGNING_SECRET'),
+      SANDBOX_WEBHOOK_SECRET: bindings.secret('SANDBOX_WEBHOOK_SECRET'),
     },
   },
 });

@@ -1,5 +1,6 @@
 import { authenticate } from './auth.mjs';
 import { createTicketToken, parseTicketToken, validateTicketToken } from './crypto.mjs';
+import { verifySandboxWebhook } from './webhook.mjs';
 
 class ApiError extends Error {
   constructor(code, status = 400) { super(code); this.code = code; this.status = status; }
@@ -59,6 +60,35 @@ export async function handleApi(request,env) {
       if(!event)bad('NOT_FOUND',404);
       const lots=await env.DB.prepare("SELECT id,label,price_cents,capacity,issued,reserved,status FROM lots WHERE event_id=? ORDER BY price_cents").bind(eventId).all();
       return ok({event,lots:(lots.results||[]).map(l=>({...l,available:Math.max(0,l.capacity-l.issued-l.reserved)}))});
+    }
+    // Signed, time-limited payment *simulation* callback from a fake provider.
+    // Does not authorize a real-world charge. The client cannot sign this event.
+    if(method==='POST' && path==='/api/webhooks/sandbox'){
+      if(env.SANDBOX_MODE!=='true'||!env.SANDBOX_WEBHOOK_SECRET||env.SANDBOX_WEBHOOK_SECRET.length<32)bad('WEBHOOK_NOT_CONFIGURED',503);
+      let event;try{event=await verifySandboxWebhook(request,env.SANDBOX_WEBHOOK_SECRET);}
+      catch(e){if(e.message==='WEBHOOK_UNCONFIGURED')bad('WEBHOOK_NOT_CONFIGURED',503);bad('WEBHOOK_UNAUTHORIZED',401);}
+      const webhookId=id(event.webhookId),orderId=id(event.orderId);
+      const prior=await env.DB.prepare('SELECT order_id FROM sandbox_webhooks WHERE id=?').bind(webhookId).first();
+      if(prior){if(prior.order_id!==orderId)bad('WEBHOOK_REPLAY_CONFLICT',409);return ok({accepted:true,replayed:true,sandbox:true});}
+      const order=await env.DB.prepare('SELECT id,event_id,buyer_uid,lot_id,quantity,status,hold_expires_at FROM orders WHERE id=?').bind(orderId).first();
+      if(!order)bad('NOT_FOUND',404);
+      if(order.status!=='held'||order.hold_expires_at<=now())bad('ORDER_EXPIRED_OR_INVALID',409);
+      const t=now(),ticketIds=Array.from({length:order.quantity},()=>crypto.randomUUID());
+      const stmts=[
+        env.DB.prepare("INSERT OR IGNORE INTO sandbox_webhooks(id,order_id,received_at) SELECT ?,id,? FROM orders WHERE id=? AND status='held' AND hold_expires_at>?").bind(webhookId,t,orderId,t),
+        env.DB.prepare("UPDATE orders SET status='issuing' WHERE id=? AND status='held' AND EXISTS(SELECT 1 FROM sandbox_webhooks WHERE id=? AND order_id=?)").bind(orderId,webhookId,orderId),
+      ];
+      for(const ticketId of ticketIds)stmts.push(env.DB.prepare("INSERT INTO tickets(id,order_id,event_id,owner_uid,status,created_at) SELECT ?,id,event_id,buyer_uid,'issued',? FROM orders WHERE id=? AND status='issuing'").bind(ticketId,t,orderId));
+      stmts.push(env.DB.prepare("UPDATE lots SET reserved=reserved-?,issued=issued+? WHERE id=? AND EXISTS(SELECT 1 FROM orders WHERE id=? AND status='issuing')").bind(order.quantity,order.quantity,order.lot_id,orderId));
+      stmts.push(env.DB.prepare("UPDATE orders SET status='issued' WHERE id=? AND status='issuing'").bind(orderId));
+      const result=await env.DB.batch(stmts);
+      if(!result[0]?.meta?.changes){
+        const replay=await env.DB.prepare('SELECT order_id FROM sandbox_webhooks WHERE id=?').bind(webhookId).first();
+        if(replay?.order_id===orderId)return ok({accepted:true,replayed:true,sandbox:true});
+        bad('ORDER_CONFLICT',409);
+      }
+      await audit(env.DB,order.event_id,'fake-provider','SIGNED_SANDBOX_WEBHOOK',orderId);
+      return ok({accepted:true,replayed:false,sandbox:true});
     }
     const user=await authenticate(request,env);
     if(method==='GET' && path==='/api/me')return ok({uid:user.uid,emailVerified:user.emailVerified});

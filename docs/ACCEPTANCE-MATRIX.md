@@ -8,7 +8,7 @@
 | F02 / AC-02 Lotes com limites | Capacidade, saldo e reservas com condição SQL e batch | Teste negativo e chamadas concorrentes simuladas | Concorrência real no D1 e expiração em vários Workers |
 | F03 / AC-03 Ingressos numerados | UUID de credencial + número global sequencial imutável (INTEGER PRIMARY KEY AUTOINCREMENT) | Node SQLite, nove cenários PASS, verifica unicidade | D1 real e validação de UX; numeração por evento não é requisito consolidado |
 | F04 / AC-04 Compra sandbox | Reserva de pedido, preço do banco, botão de confirmação **fake** | Mock SQLite | Gateway/provedor sandbox confiável, sem pagamentos reais |
-| F05 / AC-05 Emissão depois de webhook | Emissão após `sandbox-confirm` falso (não é webhook financeiro) | Requisição fake e replay | **NÃO IMPLEMENTADO**: assinatura, replay de webhook e comprovante verificável |
+| F05 / AC-05 Emissão depois de webhook | Webhook assinado de provedor **fictício** (HMAC + 5 min + recibo idempotente) e opção antiga de confirmação fake | Node SQLite: assinatura falsa, expiração, replay e emissão única | Integração de provedor real em ambiente sandbox, sem bypass pelo cliente; NÃO há confirmação financeira verdadeira |
 | F06 / AC-06 QR assinado/referenciado | HMAC para token/versionamento e QR visual SVG | Tampering no mock | Revisão de ciclo de segredo, runtime Cloudflare e QR em câmera |
 | F07 / AC-07 Validação online de uso único | D1 UNIQUE + transação batch, fiscal validado | SQLite mock 8 testes, inclusive tentativa repetida | Two-device D1 real, simulação de indisponibilidade, auditoria independente |
 | F08 / AC-08 Leitor com permissão | UI câmera BarcodeDetector + manual, fiscal por evento | RBAC API em mock | Câmera navegador Android/iOS e comportamento sem suporte/offline |

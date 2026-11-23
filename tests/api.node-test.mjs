@@ -1,6 +1,6 @@
 import test,{before,after} from 'node:test';
 import assert from 'node:assert/strict';
-import {generateKeyPairSync,createSign,randomUUID} from 'node:crypto';
+import {generateKeyPairSync,createSign,createHmac,randomUUID} from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 
@@ -41,7 +41,7 @@ class Prepared {
  async all(){return callSql([this])[0];}
 }
 const database={prepare:sql=>new Prepared(sql),batch:async statements=>callSql(statements)};
-const env={DB:database,SANDBOX_MODE:'true',FIREBASE_PROJECT_ID:'rfb-ticket-test',TICKET_SIGNING_SECRET:'0123456789test-secret-0123456789test-secret'};
+const env={DB:database,SANDBOX_MODE:'true',FIREBASE_PROJECT_ID:'rfb-ticket-test',TICKET_SIGNING_SECRET:'0123456789test-secret-0123456789test-secret',SANDBOX_WEBHOOK_SECRET:'test-sandbox-secret-for-signature-over-32-chars'};
 const encode=obj=>Buffer.from(JSON.stringify(obj)).toString('base64url');
 function token(uid){
  const now=Math.floor(Date.now()/1000),header=encode({alg:'RS256',typ:'JWT',kid:'rfb-test-key'});
@@ -179,5 +179,25 @@ test('F03 ticket numbers are stable, positive and unique globally without being 
  const owned=(await api('/api/tickets','GET',null,c)).tickets;
  assert.ok(owned.every(t=>Number.isSafeInteger(t.ticket_number)));
  assert.ok(owned.every(t=>!String(t.token || '').startsWith(String(t.ticket_number))));
+});
+test('F05 fake-provider callback signature is required, replays cannot issue tickets twice',async()=>{
+ const lot=await api('/api/events/'+eventId+'/lots','POST',{label:'Webhook Lote',capacity:1,priceCents:1500},a);
+ const order=await api('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},b);
+ assert.equal(order.httpStatus,201);
+ const payload=JSON.stringify({webhookId:randomUUID(),orderId:order.order.id,status:'sandbox_paid'});
+ const timestamp=String(Math.floor(Date.now()/1000));
+ const signature=createHmac('sha256',env.SANDBOX_WEBHOOK_SECRET).update(timestamp+'.'+payload).digest('hex');
+ async function fire(sig,stamp=timestamp,raw=payload){
+   const req=new Request('https://rfb.example/api/webhooks/sandbox',{method:'POST',headers:{'content-type':'application/json','x-rfb-timestamp':stamp,'x-rfb-signature':sig},body:raw});
+   const res=await handleApi(req,env);return {httpStatus:res.status,...await res.json()};
+ }
+ assert.equal((await fire('0'.repeat(64))).httpStatus,401);
+ assert.equal((await fire(signature,String(Number(timestamp)-3600))).httpStatus,401);
+ const first=await fire(signature);assert.equal(first.httpStatus,200);assert.equal(first.replayed,false);
+ const again=await fire(signature);assert.equal(again.httpStatus,200);assert.equal(again.replayed,true);
+ const issued=db.prepare('SELECT COUNT(*) AS n FROM tickets WHERE order_id=?').get(order.order.id);
+ assert.equal(issued.n,1);
+ assert.equal(db.prepare('SELECT status FROM orders WHERE id=?').get(order.order.id).status,'issued');
+ assert.equal((await fire(signature,timestamp,payload+' ')).httpStatus,401);
 });
 after(()=>{globalThis.fetch=originalFetch;db.close();});

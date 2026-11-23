@@ -6,7 +6,7 @@
 
 - Frontend React + TypeScript + Vite, recurso estático do Worker; Firebase Authentication email/senha em projeto de teste; ID token validado pelo Worker via JWKS Google, verificação de assinatura, exp/iat/aud/iss/sub.
 - Worker API isolada /api/*; D1 separado para eventos, lotes, pedidos e check-in com operações transacionais. Sem Firestore nesta fase: ADR-002 explica o porquê.
-- Emissão explicitamente SANDBOX e sem gateway real. A URL não deve ser oferecida como bilheteria para público pagante. Não enviar e-mail, Pix ou reembolsos reais.
+- Emissão explicitamente SANDBOX e sem gateway real. Há também receptor experimental de webhook assinado por um provedor **fictício**; o botão de confirmação fake permanece disponível apenas em SANDBOX_MODE e não prova pagamento. A URL não deve ser oferecida como bilheteria para público pagante. Não enviar e-mail, Pix ou reembolsos reais.
 - Cloudflare Free e D1 Free têm cotas: não há SLA nem garantia de uso ilimitado. Sem upgrade automático autorizado.
 
 ## Pré-requisitos
@@ -15,7 +15,7 @@
 2. Criar projeto Firebase de teste SEM conta de produção; habilitar Email/Password apenas para contas de teste; configurar Firebase App Check quando for expor a internet.
 3. Criar banco D1 exclusivamente para sandbox, NÃO apontar para `vof-2027-staging`, `food-condado-preview` ou quaisquer outros bancos existentes.
 4. Atualizar `cloudflare.config.ts`: `DB` apontando para D1 de teste correto; `FIREBASE_PROJECT_ID` exatamente igual ao `VITE_FIREBASE_PROJECT_ID`.
-5. Configurar segredo Worker `TICKET_SIGNING_SECRET` via `cf`/dashboard, com 32+ caracteres aleatórios; **nunca** registrar secret no repo, PR, arquivo `.env`, screenshot ou comentário.
+5. Configurar segredos Worker `TICKET_SIGNING_SECRET` e `SANDBOX_WEBHOOK_SECRET` via `cf`/dashboard, ambos com 32+ caracteres aleatórios diferentes; **nunca** registrar secret no repo, PR, arquivo `.env`, screenshot ou comentário.
 6. Preencher `.env.local` a partir de `.env.example` com valores públicos do Firebase. Adicionar ao `.gitignore` se ainda não estiver.
 7. Criar o schema `migrations/0001_init.sql` **no D1 de teste** via CLI Cloudflare verificada. NÃO rodar em banco existente com dados reais.
 8. Revisar regras LGPD, privacidade, política de retenção e limites antes de expor qualquer conta de teste externa.
