@@ -54,7 +54,8 @@ before(async()=>{
     bindings:{
       FIREBASE_PROJECT_ID:authProject,SANDBOX_MODE:'true',
       TICKET_SIGNING_SECRET:'test-only-worker-hmac-secret-which-is-longer-than-32',
-      SANDBOX_WEBHOOK_SECRET:'another-fake-webhook-secret-longer-than-32'
+      SANDBOX_WEBHOOK_SECRET:'another-fake-webhook-secret-longer-than-32',
+      ADMIN_UID:'admin-workerd' // synthetic test-only admin, not production
     },
     fetchMock
   });
@@ -232,4 +233,38 @@ test('workerd D1: concurrent requests cannot bypass the five-active-hold antiabu
   assert.equal((await request('/api/orders/'+active[0]+'/cancel','POST',{},rate)).status,200);
   const refill=await request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},rate);
   assert.equal(refill.status,201);
+});
+
+test('workerd D1: one-time ticket transfer rotates QR and new owner can enter',async()=>{
+  const created=await request('/api/events','POST',{title:'Transferência com prova D1',city:'Jales',startsAt:'2027-12-21T20:00:00Z'},organizer);
+  const eventId=created.eventId;
+  const lot=await request('/api/events/'+eventId+'/lots','POST',{label:'Troca única',capacity:1,priceCents:0},organizer);
+  await request('/api/events/'+eventId+'/publish','POST',{},organizer);
+  const hold=await request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},buyerA);
+  const issued=await request('/api/orders/'+hold.order.id+'/sandbox-confirm','POST',{},buyerA);
+  assert.equal(issued.status,200);
+  const item=issued.tickets[0],oldToken=item.token;
+  const forbidden=await request('/api/tickets/'+item.id+'/transfer','POST',{toUid:'buyer-workerd-b'},buyerB);
+  assert.equal(forbidden.status,404);
+  const transferred=await request('/api/tickets/'+item.id+'/transfer','POST',{toUid:'buyer-workerd-b'},buyerA);
+  assert.equal(transferred.status,200);assert.equal(transferred.oldTokenRevoked,true);
+  assert.equal((await request('/api/tickets/'+item.id+'/transfer','POST',{toUid:'buyer-workerd-a'},buyerB)).status,409);
+  assert.equal((await request('/api/checkin','POST',{eventId,token:oldToken,requestId:randomUUID()},organizer)).status,400);
+  const buyerView=await request('/api/tickets','GET',undefined,buyerB);
+  const current=buyerView.tickets.find(t=>t.id===item.id);
+  assert.ok(current?.token);assert.notEqual(current.token,oldToken);
+  const allowed=await request('/api/checkin','POST',{eventId,token:current.token,requestId:randomUUID()},organizer);
+  assert.equal(allowed.status,200);
+  assert.equal((await request('/api/tickets/'+item.id+'/transfer','POST',{toUid:'buyer-workerd-a'},buyerB)).status,409);
+});
+
+test('workerd D1: admin read-only report requires server-bound UID',async()=>{
+  const denied=await request('/api/admin/summary','GET',undefined,buyerA);
+  assert.equal(denied.status,403);
+  const admin=fakeFirebaseIdToken('admin-workerd');
+  const data=await request('/api/admin/summary','GET',undefined,admin);
+  assert.equal(data.status,200);
+  assert.ok(Number.isInteger(data.stats.total_events));
+  assert.ok(Number.isInteger(data.stats.completed_checkins));
+  assert.equal((await request('/api/admin/summary','POST',{},admin)).status,404);
 });
