@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { firebaseAuth } from './firebase';
@@ -33,7 +33,8 @@ function GateScanner({onScan}:{onScan:(token:string)=>Promise<boolean>}) {
     let stream:MediaStream|undefined,interval:ReturnType<typeof setInterval>|undefined,cancelled=false;
     const Detector=(window as unknown as { BarcodeDetector?:new (config:{formats:string[]})=>{detect:(v:HTMLVideoElement)=>Promise<Array<{rawValue:string}>>} }).BarcodeDetector;
     if(!Detector){setMessage('Leitura automática não disponível neste navegador. Use o código manual.');return;}
-    navigator.mediaDevices?.getUserMedia({video:{facingMode:'environment'}}).then(async media=>{
+    if(!navigator.mediaDevices?.getUserMedia){setMessage('Câmera indisponível neste navegador. Use o código manual.');return;}
+    navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(async media=>{
       if(cancelled){media.getTracks().forEach(t=>t.stop());return;}
       stream=media;
       const video=videoRef.current;if(!video)return;video.srcObject=media;
@@ -90,7 +91,7 @@ export default function LiveApp() {
   async function transfer(ticketId:string) {if(!user)return;const toUid=transferTarget[ticketId];if(!toUid)return;await run(async()=>{
     await api('/api/tickets/'+ticketId+'/transfer',user,'POST',{toUid});await refresh();setMessage('Ingresso transferido; o QR anterior foi invalidado.');
   });}
-  async function checkin(value:string):Promise<boolean> {
+  const checkin=useCallback(async (value:string):Promise<boolean>=> {
     if(!user||!scanEvent||!value.trim()){setMessage('Selecione o evento e informe o token.');return false;}
     setBusy(true);setMessage('');
     try {
@@ -101,7 +102,7 @@ export default function LiveApp() {
       return true;
     }catch(e){setMessage('ENTRADA BLOQUEADA: '+errorText(e));return false;}
     finally{setBusy(false);}
-  }
+  },[user,scanEvent]);
   async function reloadManaged(id:string) {
     if(!user)return;
     const d=await api<EventDetail>('/api/manage/events/'+id,user);
