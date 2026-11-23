@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "product": "RFBTicket",
+  "repository": "CristianoRFB/RFB-Ticket",
+  "source_method_pr": 4,
+  "source_slug": "11-rfbticket",
+  "stage": "G1_SCAFFOLD_IN_PR",
+  "source_imported": true,
+  "scaffold": "PENDING_IMPORT",
+  "backend": "NOT_IMPLEMENTED",
+  "production": false,
+  "real_payments": false,
+  "unit_tests": "NOT_RUN",
+  "typecheck": "NOT_RUN",
+  "build": "NOT_RUN",
+  "browser_qa": "NOT_RUN",
+  "source_png_assets": "NOT_IMPORTED",
+  "monthly_recurring_cost_added_brl": 0
+}

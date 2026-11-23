@@ -1,0 +1,234 @@
+# RFB — Especificação de marca atualizada; fonte histórica original arquivada separadamente.
+
+RFBTICKET — ESPECIFICAÇÃO COMPLETA
+======================================================================
+Status: concepção. Produto: RFBTicket. Segmento: Ingressos e acesso a eventos. Slogan: Da venda ao check-in sem filas.
+
+O PROBLEMA
+Eventos precisam vender ingressos, controlar lotes e impedir múltiplas entradas com o mesmo ticket.
+
+QUEM USA
+Organizadores, compradores e equipe de portaria.
+
+PROPOSTA DE VALOR
+Um ingresso é validado na portaria e a segunda tentativa é rejeitada.
+
+IDENTIDADE DO DESIGN
+Evento com cartaz, lotes e cartão de ingresso com QR visual.
+
+STACK
+React + TypeScript + Vite; Cloudflare Workers / Static Assets; Firebase Auth / Firestore; ferramentas opcionais conforme módulo.
+
+ORIENTAÇÃO DE CUSTO
+Taxas de pagamento, SMS/e-mail e hardware de leitura podem cobrar.
+
+ARQUITETURA ESPECIALIZADA
+Firestore transaction por ingresso e capacidade; Worker para webhooks e scanner autorizado.
+
+RISCO PRINCIPAL
+QR Code sozinho não impede fraude; validação precisa ser online/transacional ou offline com reconciliação auditada.
+
+
+======================================================================
+ATORES E AUTORIZAÇÃO
+======================================================================
+1. Visitante: visão e operações limitadas a seu papel; validar no servidor e nas rules.
+2. Comprador: visão e operações limitadas a seu papel; validar no servidor e nas rules.
+3. Organizador: visão e operações limitadas a seu papel; validar no servidor e nas rules.
+4. Fiscal de entrada: visão e operações limitadas a seu papel; validar no servidor e nas rules.
+5. Administrador: visão e operações limitadas a seu papel; validar no servidor e nas rules.
+
+
+======================================================================
+MÓDULOS E PROPÓSITO
+======================================================================
+01. Eventos: tela de listagem, detalhe, operação, estados de falha e permissão.
+02. Lotes e capacidade: tela de listagem, detalhe, operação, estados de falha e permissão.
+03. Checkout: tela de listagem, detalhe, operação, estados de falha e permissão.
+04. Emissão de ingressos: tela de listagem, detalhe, operação, estados de falha e permissão.
+05. Meus ingressos: tela de listagem, detalhe, operação, estados de falha e permissão.
+06. Leitor de QR: tela de listagem, detalhe, operação, estados de falha e permissão.
+07. Check-in: tela de listagem, detalhe, operação, estados de falha e permissão.
+08. Reembolso: tela de listagem, detalhe, operação, estados de falha e permissão.
+09. Painel do organizador: tela de listagem, detalhe, operação, estados de falha e permissão.
+10. Relatórios: tela de listagem, detalhe, operação, estados de falha e permissão.
+
+
+======================================================================
+FUNCIONALIDADES, REGRAS E LIMITES
+======================================================================
+01. Catálogo de eventos. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+02. Lotes com limites. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+03. Ingressos numerados. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+04. Compra com sandbox. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+05. Emissão depois de webhook. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+06. QR assinado/referenciado. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+07. Validação online de uso único. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+08. Leitor com permissão. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+09. Relatório por entrada. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+10. Cancelamento e reembolso. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+11. Transferência com controle. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+12. Log de acessos. Implementar autorização, input validation, estado de carregamento, estado vazio, erro com recuperação, logs apropriados e teste E2E.
+
+
+======================================================================
+JORNADA PRINCIPAL E CASOS ALTERNATIVOS
+======================================================================
+1. Escolher evento.
+2. Selecionar ingresso.
+3. Reservar lote.
+4. Pagar no sandbox.
+5. Emitir credencial.
+6. Validar check-in uma vez.
+
+Em qualquer etapa: usuário não autenticado, sem permissão, conexão interrompida, item removido, limite excedido, edição concorrente, tentativa duplicada e retomada são fluxos previstos.
+
+
+======================================================================
+MÁQUINA DE ESTADOS
+======================================================================
+disponivel -> reservado -> pago -> emitido -> utilizado -> cancelado -> estornado
+Cada transição deve definir ator permitido, pré-condição, pós-condição, efeito externo, política de retry e log; setar transições ilegais como erro de domínio.
+
+
+======================================================================
+ENTIDADES DE DOMÍNIO
+======================================================================
+1. Usuario: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+2. Organizador: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+3. Evento: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+4. Edicao: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+5. Lote: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+6. Ingresso: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+7. Pedido: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+8. Pagamento: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+9. Checkin: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+10. SessaoLeitor: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+11. Dispositivo: id, status, owner/tenant, campos especializados, versionamento e timestamps.
+
+
+======================================================================
+CATÁLOGO EXAUSTIVO DE TELAS
+======================================================================
+T001 — Landing / apresentação. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T002 — Cadastro / criar conta. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T003 — Login e recuperar acesso. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T004 — Onboarding e perfil. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T005 — Página principal / feed. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T006 — Busca e filtros. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T007 — Detalhes do recurso. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T008 — Fluxo de criação. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T009 — Fluxo de edição. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T010 — Confirmação / revisão. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T011 — Estado concluído / recibo. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T012 — Lista pessoal / histórico. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T013 — Notificações. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T014 — Mensagens ou contato. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T015 — Central de ajuda. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T016 — Preferências e privacidade. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T017 — Acesso e segurança. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T018 — Página vazia / primeira vez. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T019 — Carregamento e skeleton. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T020 — Erro de rede / retentar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T021 — Sem permissão / bloqueio. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T022 — Estado de conflito concorrente. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T023 — Admin: visão geral. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T024 — Admin: gestão de usuários. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T025 — Admin: moderação e auditoria. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T026 — Admin: regras e configurações. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T027 — Admin: relatórios. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T028 — Página 404 / recurso indisponível. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T029 — Módulo / Eventos — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T030 — Módulo / Eventos — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T031 — Módulo / Eventos — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T032 — Módulo / Lotes e capacidade — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T033 — Módulo / Lotes e capacidade — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T034 — Módulo / Lotes e capacidade — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T035 — Módulo / Checkout — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T036 — Módulo / Checkout — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T037 — Módulo / Checkout — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T038 — Módulo / Emissão de ingressos — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T039 — Módulo / Emissão de ingressos — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T040 — Módulo / Emissão de ingressos — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T041 — Módulo / Meus ingressos — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T042 — Módulo / Meus ingressos — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T043 — Módulo / Meus ingressos — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T044 — Módulo / Leitor de QR — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T045 — Módulo / Leitor de QR — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T046 — Módulo / Leitor de QR — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T047 — Módulo / Check-in — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T048 — Módulo / Check-in — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T049 — Módulo / Check-in — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T050 — Módulo / Reembolso — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T051 — Módulo / Reembolso — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T052 — Módulo / Reembolso — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T053 — Módulo / Painel do organizador — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T054 — Módulo / Painel do organizador — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T055 — Módulo / Painel do organizador — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T056 — Módulo / Relatórios — lista. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T057 — Módulo / Relatórios — detalhe. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+T058 — Módulo / Relatórios — criar/editar. Definir layout desktop/mobile, componentes acessíveis, vazio, carregando, erro, sem permissão e estados extremos.
+
+
+======================================================================
+CHECKLIST DE ACEITE
+======================================================================
+AC-01: Catálogo de eventos — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-02: Lotes com limites — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-03: Ingressos numerados — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-04: Compra com sandbox — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-05: Emissão depois de webhook — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-06: QR assinado/referenciado — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-07: Validação online de uso único — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-08: Leitor com permissão — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-09: Relatório por entrada — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-10: Cancelamento e reembolso — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-11: Transferência com controle — persistência, autorização, concorrência, teste de integração, teste E2E.
+AC-12: Log de acessos — persistência, autorização, concorrência, teste de integração, teste E2E.
+
+
+======================================================================
+SEGURANÇA/PRIVACIDADE E COMPLIANCE
+======================================================================
+Risco específico: QR Code sozinho não impede fraude; validação precisa ser online/transacional ou offline com reconciliação auditada.
+Negar acesso por padrão; evitar PII em logs; segregação por conta/empresa; rate limits; verificação de token no Worker; hooks de webhook com assinatura; inventário de dados, retenção e eliminação; prova de consentimento quando aplicável; testes OWASP ASVS 5.0.
+
+
+======================================================================
+ESTRATÉGIA DE TESTES
+======================================================================
+Vitest para regras de domínio, Firebase Emulator para rules, Playwright em 390/768/1440px, contratos HTTP, fuzz de autorização, testes com duas sessões em paralelo, QA manual com leitor de tela, teste de carga moderado e observabilidade.
+
+
+======================================================================
+BACKLOG E EVOLUÇÃO
+======================================================================
+G0: documentação. G1: repositório e infraestrutura local. G2: um fluxo completo. G3: todos os atores principais. G4: integrações especializadas. G5: segurança/QA/auditoria. G6: deploy e demo pública.
+Não ativar custos externos antes de aprovar estimativa e limites.
+
+
+======================================================================
+REFERÊNCIAS
+======================================================================
+Pesquisa de tecnologias - Stack Overflow Survey 2026 — https://survey.stackoverflow.co/2026/technology/data
+State of JS 2025 — https://stateofjs.com/en-US
+Cloudflare Workers + Static Assets — https://developers.cloudflare.com/workers/static-assets/
+Cloudflare Workers limites — https://developers.cloudflare.com/workers/platform/limits/
+Cloudflare CLI cf — https://developers.cloudflare.com/cf/projects/
+Cloudflare R2 preços — https://developers.cloudflare.com/r2/pricing/
+Cloudflare Stream preços — https://developers.cloudflare.com/stream/pricing/
+Cloudflare Realtime SFU preços — https://developers.cloudflare.com/realtime/sfu/platform/pricing/
+Firebase preços — https://firebase.google.com/pricing
+Firestore Standard edition — https://firebase.google.com/docs/firestore/standard-edition
+Firestore melhores práticas — https://firebase.google.com/docs/firestore/best-practices
+Firestore transações — https://firebase.google.com/docs/firestore/manage-data/transactions
+Firebase Storage mudança de billing — https://firebase.google.com/docs/storage/faqs-storage-changes-announced-sept-2024
+Firebase Auth: validar ID token — https://firebase.google.com/docs/auth/admin/verify-id-tokens
+Firebase Emulator Suite — https://firebase.google.com/docs/emulator-suite
+OWASP ASVS 5.0 — https://asvs.owasp.org/
+WCAG 2.2 W3C — https://www.w3.org/WAI/standards-guidelines/wcag/
+Nielsen Norman Group heurísticas — https://www.nngroup.com/articles/ten-usability-heuristics/
+OpenStreetMap Tile Usage Policy — https://operations.osmfoundation.org/policies/tiles/
+Google Maps preços — https://developers.google.com/maps/billing-and-pricing/overview
+Mercado Pago split — https://www.mercadopago.com.br/developers/pt/docs/split-payments/split-1-1/integration-configuration/integrate-marketplace
+Mercado Pago Pix — https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/websites/pix

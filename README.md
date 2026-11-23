@@ -1,13 +1,30 @@
 # RFBTicket — RFB Labs
 
-> **Projeto em planejamento.** Repositório inicial do produto RFBTicket; **ainda não é uma aplicação pronta nem um serviço publicado.**
+> **Em planejamento.** G0 documentado, scaffold G1 em preparação. Não há aplicação funcional, backend, clientes, pagamentos, produção nem QA de navegador.
 
-Plataforma de ingressos, eventos, validação de acesso e operação de portaria.
+Ingressos, lotes, pedidos e validação de acesso, sem bilheteria real.
 
-Este repositório foi iniciado em 22/11/2026 para receber um Starter Pack técnico derivado das especificações RFB. O conteúdo em preparação ficará em uma branch e PR próprios antes da integração na `main`.
+## Starter Pack importado
 
-**Fonte do Starter Pack:** [RFB Method GPT — 11-rfbticket](https://github.com/CristianoRFB/rfb-method-gpt/tree/feature/portfolio-seven-labs-14-starter-v1/portfolio/projetos/11-rfbticket). A coleção contém 14 produtos, mas este repo é independente.
+- [Especificação RFB](docs/ESPECIFICACAO-RFB.txt)
+- [Starter Pack](docs/STARTER-PACK.md)
+- [Diagramas](docs/DIAGRAMAS.md) — 7 Mermaid editáveis
+- [UX e catálogo](docs/UX-DESIGN-AND-QA.md) — 58 telas previstas, não implementadas
+- [Roadmap](docs/ROADMAP.md) — G0 a G6
+- [Proveniência](docs/PROVENIENCIA.md) e [estado](PROJECT_STATUS.json)
 
-**Estado declarado:** `G0_PLANNING / APP_NOT_IMPLEMENTED / TESTS_NOT_RUN / DEPLOY_NOT_DONE`.
+A primeira interface React/Vite é **ilustrativa**, com dados sintéticos e controle de etapas local. Não realiza operações reais do negócio.
 
-Meta de infraestrutura: R$0 de custo recorrente adicional, sem ativar cobranças/contas/serviços em produção. Nunca usar dados reais nos protótipos antes de revisão de privacidade.
+### Rodar no computador (não executado nesta importação)
+
+```sh
+npm install
+npm run typecheck
+npm run test
+npm run build
+npm run dev
+```
+
+A meta de infraestrutura é R$0/mês adicional; pagamentos, IA, mídia, mapas e terceiros podem ter custos externos. 
+
+**Fonte controlada:** RFB Method, PR #4, pasta `11-rfbticket`. O método é privado; não depender dele para links de produto público.
