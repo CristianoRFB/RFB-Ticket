@@ -211,3 +211,25 @@ test('workerd D1: CSV report is allowed only for the event owner',async()=>{
   const outsider=await mf.dispatchFetch(url,{headers:{Authorization:'Bearer '+buyerA}});
   assert.equal(outsider.status,403);
 });
+
+test('workerd D1: concurrent requests cannot bypass the five-active-hold antiabuse cap',async()=>{
+  const rate=fakeFirebaseIdToken('buyer-limited-workerd');
+  const created=await request('/api/events','POST',{title:'Teste limite D1',city:'Jales',startsAt:'2027-11-30T20:00:00Z'},organizer);
+  const ev=created.eventId;
+  const lot=await request('/api/events/'+ev+'/lots','POST',{label:'Sem excedente',capacity:10,priceCents:0},organizer);
+  await request('/api/events/'+ev+'/publish','POST',{},organizer);
+  const active=[];
+  for(let i=0;i<4;i++){
+    const hold=await request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},rate);
+    assert.equal(hold.status,201);active.push(hold.order.id);
+  }
+  const [first,second]=await Promise.all([
+    request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},rate),
+    request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},rate)
+  ]);
+  assert.deepEqual([first.status,second.status].sort((a,b)=>a-b),[201,429]);
+  assert.equal((await request('/api/events/'+ev)).lots[0].reserved,5);
+  assert.equal((await request('/api/orders/'+active[0]+'/cancel','POST',{},rate)).status,200);
+  const refill=await request('/api/orders','POST',{lotId:lot.lotId,quantity:1,requestKey:randomUUID()},rate);
+  assert.equal(refill.status,201);
+});
