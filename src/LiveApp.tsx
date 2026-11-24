@@ -7,8 +7,9 @@ import QR from './QR';
 import {selectCheckinAttempt, type CheckinAttempt} from './checkinRequest';
 import {selectReservationAttempt, type ReservationAttempt} from './reservationRequest';
 import {errorMessage} from './errorMessages';
+import {recentActivity} from './activity';
 
-type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador'|'admin'|'ajuda'|'conta';
+type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador'|'admin'|'ajuda'|'conta'|'atividade';
 type Report = {stats:EventStats;financials:string};
 function errorText(e: unknown) {return errorMessage(e);}
 function AuthPanel({onDone}:{onDone:()=>void}) {
@@ -244,7 +245,7 @@ export default function LiveApp() {
   const selectedLot=detail?.lots.find(l=>l.id===lotId);
   const nav:[Tab,string][]=[['explorar','Eventos'],['pedidos','Pedidos'],['ingressos','Meus ingressos'],['portaria','Portaria'],['organizador','Organizador'],['ajuda','Ajuda']];
   if(isAdmin)nav.push(['admin','Administração']);
-  if(user)nav.push(['conta','Conta']);
+  if(user)nav.push(['atividade','Atividade'],['conta','Conta']);
   return <div className="live-shell">
     <header className="live-header"><div><p className="live-kicker">RFB LABS / ACESSO A EVENTOS</p><h1>RFBTicket <span>Sandbox</span></h1><p>Bilheteria de demonstração com validação online. Sem pagamentos reais.</p></div>
       <div className="live-identity">{user?<><span title="UID do Firebase">UID: {user.uid}</span><button type="button" className="live-secondary" onClick={()=>firebaseAuth&&signOut(firebaseAuth)}>Sair</button></>:<span>Visitante — autentique para operar</span>}</div>
@@ -358,6 +359,15 @@ export default function LiveApp() {
       <details><summary>Como funcionam transferências e reembolsos?</summary><p>Cada ingresso pode ser transferido uma vez, invalidando o QR antigo. O reembolso é somente uma simulação e nunca transfere dinheiro.</p></details>
       <details><summary>Privacidade e retenção de dados</summary><p>Os testes devem utilizar contas e eventos fictícios. O sistema não está homologado para cadastro de clientes reais. A política definitiva de retenção e exclusão depende da integração de homologação.</p></details>
       <details><summary>O sistema funciona sem internet?</summary><p>Não. Sem conexão ou confirmação do servidor, a portaria nunca deve assumir que a entrada foi aprovada.</p></details>
+    </main>}
+    {tab==='atividade'&&user&&<main className="live-panel live-help"><h2>Atualizações da conta</h2>
+      <p>Histórico informativo derivado dos seus pedidos e ingressos de teste. Não são notificações push nem mensagens enviadas.</p>
+      {recentActivity(orders,tickets).length===0&&<p>Nenhuma atualização nesta conta.</p>}
+      <ol className="live-activity-list">{recentActivity(orders,tickets).map(row=><li key={row.id}>
+        <strong>{row.title}</strong><span>{row.detail}</span>
+        {row.createdAt>0&&<time dateTime={new Date(row.createdAt*1000).toISOString()}>{new Date(row.createdAt*1000).toLocaleString('pt-BR')}</time>}
+      </li>)}</ol>
+      <button className="live-secondary" type="button" disabled={busy} onClick={()=>run(()=>refresh())}>Atualizar pedidos e ingressos</button>
     </main>}
     {tab==='conta'&&user&&<main className="live-panel live-help"><h2>Sua conta de teste</h2>
       <p><strong>E-mail:</strong> {user.email||'Não informado'}</p><p><strong>UID:</strong> <code className="live-code">{user.uid}</code></p>
