@@ -319,4 +319,24 @@ test('five active holds per buyer are capped atomically, cancellation frees a sl
  assert.equal((await api('/api/events/'+event.eventId)).lots[0].reserved,5);
 });
 
+
+test('event discovery: pagination, search, city filter, literal wildcards and invalid input',async()=>{
+  const term='RFBQSearch'+randomUUID().replace(/-/g,'').slice(0,12);
+  for(let index=0;index<23;index++){
+    db.prepare("INSERT INTO events(id,organizer_uid,title,description,city,starts_at,status) VALUES(?,?,?,?,?,?,'published')")
+      .run(randomUUID(),'organizer-a',term+' Show '+String(index).padStart(2,'0'),'Laboratório QA','Jales',`2028-04-${String(index+1).padStart(2,'0')}T20:00:00Z`);
+  }
+  const first=await api('/api/events?q='+term+'&city=JALES');
+  assert.equal(first.httpStatus,200);assert.equal(first.events.length,20);assert.equal(first.hasMore,true);assert.equal(first.page,1);
+  const next=await api('/api/events?q='+term+'&city=jales&page=2');
+  assert.equal(next.events.length,3);assert.equal(next.hasMore,false);
+  assert.equal(new Set([...first.events,...next.events].map(e=>e.id)).size,23);
+  assert.equal((await api('/api/events?q='+term+'&city=Santos')).events.length,0);
+  assert.equal((await api('/api/events?q=%25')).events.length,0);
+  assert.equal((await api('/api/events?q=')).httpStatus,200);
+  for(const value of ['/api/events?page=0','/api/events?page=-1','/api/events?page=01','/api/events?page=10000','/api/events?q='+('x'.repeat(101))]) {
+    const response=await api(value);assert.equal(response.httpStatus,400);assert.equal(response.error,'INVALID_SEARCH');
+  }
+});
+
 after(()=>{globalThis.fetch=originalFetch;db.close();});
