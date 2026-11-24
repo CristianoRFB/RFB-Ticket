@@ -34,3 +34,5 @@
 .live-activity-list li{display:grid;gap:5px;border:1px solid #4b365a;background:#211729;border-radius:12px;padding:14px}
 .live-activity-list span,.live-activity-list time{font-size:.85rem;color:#d1c2dd}
 .live-activity-list strong{color:#fff}
+
+.live-brand-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.live-brand-title img{width:clamp(46px,5vw,60px);height:auto;border-radius:12px;flex-shrink:0}.mode-bar strong{display:inline-flex;align-items:center;gap:9px}.mode-bar strong img{width:26px;height:26px;border-radius:6px}
