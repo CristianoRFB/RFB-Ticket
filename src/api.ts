@@ -12,8 +12,12 @@ export async function api<T>(path: string, user: User|null, method='GET', body?:
   const headers: Record<string,string> = {};
   if (user) headers.Authorization = 'Bearer ' + await user.getIdToken();
   if (body !== undefined) headers['Content-Type']='application/json';
-  const response=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),credentials:'omit'});
-  const data=await response.json() as ApiReply<T>;
+  let response:Response;
+  try{response=await fetch(path,{method,headers,body:body===undefined?undefined:JSON.stringify(body),credentials:'omit'});}
+  catch{throw new Error('NETWORK_ERROR');}
+  let data:ApiReply<T>;
+  try{data=await response.json() as ApiReply<T>;}
+  catch{throw new Error('SERVICE_UNAVAILABLE');}
   if(!response.ok)throw new Error(data.error||'HTTP_'+response.status);
   return data;
 }
