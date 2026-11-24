@@ -95,7 +95,7 @@ export default function LiveApp() {
     // Clear prior-account data synchronously, not after an async refresh.
     authGeneration.current+=1;userRef.current=u;setUser(u);
     setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);
-    setAdminEvents([]);setAdminAudit([]);setGateActivity([]);
+    setAdminEvents([]);setAdminAudit([]);setGateActivity([]);setGateBusy(false);setGateError('');
     setScanEvent('');setToken('');setManageDetail(null);setManageId('');setDetail(null);
     pendingCheckin.current=null;pendingReservation.current=null;setMessage('');
   }) : undefined,[]);
@@ -121,7 +121,10 @@ export default function LiveApp() {
       setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);setAdminEvents([]);setAdminAudit([]);
     }
   }
-  useEffect(()=>{refresh(user).catch(e=>setMessage(errorText(e)));},[user]);
+  useEffect(()=>{
+    const generation=authGeneration.current;
+    refresh(user).catch(e=>{if(generation===authGeneration.current)setMessage(errorText(e));});
+  },[user]);
   async function run(action:()=>Promise<void>) {setBusy(true);setMessage('');try{await action();}catch(e){setMessage(errorText(e));}finally{setBusy(false);}}
   async function openEvent(id:string) {await run(async()=>{setLotId('');setDetail(null);const data=await api<EventDetail>('/api/events/'+id,null);setDetail(data);});}
   async function searchCatalog(e:FormEvent) {
@@ -160,13 +163,16 @@ export default function LiveApp() {
   });}
   const loadGateActivity=useCallback(async (eventId:string,page=1)=>{
     if(!user||!eventId)return;
+    const generation=authGeneration.current;
+    const current=()=>generation===authGeneration.current && userRef.current?.uid===user.uid;
     setGateBusy(true);setGateError('');
     try{
       const response=await api<{checkins:Array<{ticket_number:number;created_at:number}>;page:number;hasMore:boolean}>(
         '/api/events/'+eventId+'/checkins?page='+page,user);
+      if(!current())return;
       setGateActivity(response.checkins);setGatePage(response.page);setGateHasMore(response.hasMore);
-    }catch(e){setGateError('Não foi possível consultar as entradas: '+errorText(e));}
-    finally{setGateBusy(false);}
+    }catch(e){if(current())setGateError('Não foi possível consultar as entradas: '+errorText(e));}
+    finally{if(current())setGateBusy(false);}
   },[user]);
   useEffect(()=>{
     if(!scanEvent||!user){setGateActivity([]);setGatePage(1);setGateHasMore(false);setGateError('');return;}
@@ -192,7 +198,9 @@ export default function LiveApp() {
   },[user,scanEvent,loadGateActivity]);
   async function reloadManaged(id:string) {
     if(!user)return;
+    const generation=authGeneration.current;
     const d=await api<EventDetail>('/api/manage/events/'+id,user);
+    if(generation!==authGeneration.current||userRef.current?.uid!==user.uid)return;
     setManageId(id);setManageDetail(d);
     setEditTitle(d.event.title);setEditCity(d.event.city);setEditDescription(d.event.description||'');
     const instant=new Date(d.event.starts_at);
@@ -200,6 +208,7 @@ export default function LiveApp() {
     // A fiscal is allowed to consult an event but NOT its financial report.
     if(d.event.organizer_uid===user.uid){
       const r=await api<Report>('/api/events/'+id+'/stats',user);
+      if(generation!==authGeneration.current||userRef.current?.uid!==user.uid)return;
       setReport(r);
     } else setReport(null);
   }
@@ -243,12 +252,14 @@ export default function LiveApp() {
   });}
   async function loadAdminViews(eventsPage=adminEventPage,auditPage=adminAuditPage){
     if(!user||!isAdmin)return;
+    const generation=authGeneration.current;
     await run(async()=>{
       const [summary,eventRows,auditRows]=await Promise.all([
         api<{stats:NonNullable<typeof adminReport>}>('/api/admin/summary',user),
         api<{events:TicketEvent[];page:number;hasMore:boolean}>('/api/admin/events?page='+eventsPage,user),
         api<{audit:Array<{event_id:string;action:string;created_at:number}>;page:number;hasMore:boolean}>('/api/admin/audit?page='+auditPage,user)
       ]);
+      if(generation!==authGeneration.current||userRef.current?.uid!==user.uid)return;
       setAdminReport(summary.stats);setAdminEvents(eventRows.events);setAdminEventPage(eventRows.page);setAdminEventMore(eventRows.hasMore);
       setAdminAudit(auditRows.audit);setAdminAuditPage(auditRows.page);setAdminAuditMore(auditRows.hasMore);
     });
