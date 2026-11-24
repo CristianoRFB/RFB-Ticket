@@ -29,7 +29,7 @@ test('public catalogue search, pagination, ticket total and help have no billing
  await expect(page.getByRole('button',{name:/Festival Aurora QA/})).toBeVisible();
  await page.getByRole('button',{name:'Próxima'}).first().click();
  await expect(page.getByRole('button',{name:/Conferência de Tecnologia QA/})).toBeVisible();
- await page.getByRole('textbox',{name:'Nome ou descrição'}).fill('Aurora');
+ await page.getByRole('searchbox',{name:'Nome ou descrição'}).fill('Aurora');
  await page.getByRole('button',{name:'Buscar'}).click();
  await expect(page.getByRole('button',{name:/Festival Aurora QA/})).toBeVisible();
  await page.getByRole('button',{name:/Festival Aurora QA/}).click();
@@ -43,7 +43,7 @@ test('public catalogue search, pagination, ticket total and help have no billing
  await expect(page.getByText('não compre nem apresente essas credenciais',{exact:false})).toBeVisible();
 });
 test('empty result and no horizontal overflow in public sandbox UI',async({page})=>{
- await page.getByRole('textbox',{name:'Cidade'}).fill('Cidade Inexistente');
+ await page.getByRole('searchbox',{name:'Cidade'}).fill('Cidade Inexistente');
  await page.getByRole('button',{name:'Buscar'}).click();
  await expect(page.getByText('Nenhum evento encontrado.')).toBeVisible();
  await page.getByRole('button',{name:'Limpar filtros'}).click();
