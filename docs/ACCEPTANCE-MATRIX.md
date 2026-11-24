@@ -1,24 +1,20 @@
-# RFBTicket — Matriz F01–F12 / AC-01–AC-12 (S008 — 23/11/2026)
+# RFBTicket — Matriz atual F01–F12 / AC-01–AC-12 (S010, 23/11/2026)
 
-**Regra:** implementado em código sandbox ≠ homologado. 17 testes API SQLite, 8 testes Miniflare+Workerd D1, 5 testes domínio, 2 Vitest e 6 Playwright demo PASS em GitHub Actions run 45178640841. Firebase e D1 remotos, câmera real e gateway de pagamento = NOT_RUN. **Percentual homologado: não determinado.**
+**Não confundir código sandbox com aceite.** Código verificado no commit `4d6b5a437548f161e80a1ffe230cb26c2cfbb44c`, [CI 45305151761](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45305151761): 19/19 Node SQLite, 11/11 Workerd+D1 local, 5/5 domínio, 15/15 Vitest, 6/6 Playwright demo e 6/6 Playwright sandbox **com Firebase fictício/API mock**. Typecheck, Vite build e Cloudflare dry-run aprovados. Nenhum deploy externo.
 
-| F / AC | Código efetivo em branch Draft | Evidência | Gate de aceite ainda aberto |
+| F/AC | Implementado no sandbox | Evidência local | Gate de conclusão aberto |
 |---|---|---|---|
-| F01 / AC-01 Catálogo | API de eventos publicados, criação, edição por dono e publicação; editor UI | API SQLite + Workerd D1 + CI React build | Firebase Auth real, UX mobile, staging |
-| F02 / AC-02 Lotes/estoque | Capacidade, pausa, reserva atômica, expiração e limite de 5 holds ativos/UID | Workerd D1 concorrente (última vaga e limite) | Conflito entre regiões, ataque em escala, D1 remoto |
-| F03 / AC-03 Numeração | Ticket número global AUTOINCREMENT estável, UUID separado para token | API SQLite + Workerd D1 issuance | UX, numeração de negócio e staging |
-| F04 / AC-04 Compra sandbox | Reserva de 10 min e confirmação fake por comprador | Node SQLite + Workerd D1 | Provedor financeiro sandbox real; nenhuma cobrança |
-| F05 / AC-05 Webhook/emissão | Provedor fictício HMAC SHA256 com tempo/replay e emissão transacional | Node SQLite + Workerd D1 fake webhook | Webhook real do provedor, idempotência vendor, sem bypass fake |
-| F06 / AC-06 QR seguro | Token HMAC com versão, validação server e QR SVG | Workerd crypto/replay, Node tamper | Revogação operacional/segredo e câmera real |
-| F07 / AC-07 Check-in único | INSERT UNIQUE+batch D1, reentrada 409 e replay mesmo fiscal | Workerd D1 dois fiscais simultâneos PASS | D1 remoto, dois dispositivos, erro de rede |
-| F08 / AC-08 Fiscal autorizado | Staff gate por evento, scanner BarcodeDetector/manual, revogação imediata | Node SQLite e Workerd D1 RBAC | Teste câmera Android/iOS, acessibilidade e permissões |
-| F09 / AC-09 Relatórios | KPIs por evento e CSV privado até 5000 checkins (ticket number + timestamp) | Node SQLite, Workerd D1 export/negação | Paginação, retenção, relatório de grandes eventos |
-| F10 / AC-10 Cancelamento/refundo | Cancelar reserva, evento e reembolso **fictício**; token revogado e capacidade devolvida | Node SQLite + Workerd D1 | Gate financeiro sandbox real, política de estorno, nenhum dinheiro transferido |
-| F11 / AC-11 Transferência | Transferência única UID->UID, rotação QR anterior, proibida após uso | Node SQLite | Workerd D1 transferência/QR rotacionado PASS; prova identidade destinatário, UX real |
-| F12 / AC-12 Auditoria | Log de ações sensíveis por evento e relatórios restritos | Node SQLite | Negativas sanitizadas, retenção LGPD, alertas e exportação revisada |
+| F01 / AC-01 Catálogo de eventos | Eventos publicados, detalhes, editor por dono, busca parametrizada/paginada e filtros de cidade | SQLite, Workerd D1, React/Playwright mock | Staging Firebase/D1 real, pesquisa acessível com dados reais de teste |
+| F02 / AC-02 Lotes com limites | Pausa, estoque atômico, reservas com expiração/limite 5 por UID, retry comprador idempotente | Concorrência Workerd D1, Vitest retry | Região/quotas D1 remotas, bots coordenados |
+| F03 / AC-03 Ingressos numerados | Número global imutável, UUID para token | Node e Workerd D1 | Numeração/UX testada no staging |
+| F04 / AC-04 Compra sandbox | Checkout com reserva e confirmação **fictícia**, sem cobrança | Node/D1 local | PSP real de sandbox homologado sem pagamentos reais |
+| F05 / AC-05 Emissão após webhook | Receptor HMAC de **provedor fictício**, assinaturas e idempotência | Teste local Workerd HMAC/replay | Contrato/credenciais de PSP sandbox real e bloqueio do atalho fake |
+| F06 / AC-06 QR assinado/referenciado | QR SVG e HMAC server-side com versão/revogação | Testes locais assinatura/tampering | Leitura real, segredo rotativo operacional |
+| F07 / AC-07 Check-in único online | SQL único/atômico + audit de sucesso na mesma transação; retry mesmo requestId | D1 local 2 scanners concorrentes | D1 remoto, dois aparelhos, perda de rede |
+| F08 / AC-08 Leitor autorizado | Fiscal vinculado a evento, revogação, câmera quando suportada/fallback manual, história de entradas | D1 local RBAC, tipo/build | Câmera Android/iOS física, conectividade irregular |
+| F09 / AC-09 Relatórios | KPIs, CSV privado até 5000 linhas e histórico de check-ins paginado, sem UIDs no relatório | Node/Workerd D1 redaction | Testes com grandes eventos e retenção LGPD |
+| F10 / AC-10 Cancelamento/reembolso | Cancelar hold/evento, fake refund revogando QR e liberando vaga, confirmação UI | Node/Workerd D1 | Fluxo comercial/PSP e política de estorno real |
+| F11 / AC-11 Transferência controlada | Uma transferência por token, QR antigo invalidado, confirmação UI | Workerd D1, React build | Identidade real do destinatário e UX autenticada |
+| F12 / AC-12 Log de acessos | Auditoria de ações incluindo check-in atômico, visão paginada organizador e admin sanitizada | Node e Workerd D1 RBAC | Política LGPD, rate limit de negativas, observabilidade e incidentes |
 
-**Atores:** visitante, comprador, organizador, fiscal, administrador leitura restrita. Os cinco possuem rotas/fluxos de sandbox; identidade real ainda não foi testada.
-
-**Telas e diagramas:** T001–T058: catálogo de 58 IDs documentado, **não 58 telas homologadas**. D001–D007: 7 esboços auditados, não aprovação final.
-
-**Gates por ambiente:** Node SQLite 17/17 PASS; Workerd D1 local 8/8 PASS; CI typecheck/Vitest/build PASS; Chromium demo 6/6 PASS; cf deploy dry-run PASS; D1 CLI local PASS. Firebase remoto, D1 remoto, gateway sandbox real, device-camera, prod deploy, backup/restore = NOT_RUN. Não declarar plataforma pronta para eventos reais.
+**Matriz de 58 telas:** [UX](UX-DESIGN-AND-QA.md) com 32 rotas/componentes de sandbox, 23 parciais e 3 ausentes. **Percentual de conclusão do produto:** não comprovado. Meta solicitada 90% permanece aberta até testes e aceites independentes. Recursos Firebase, D1, PSP e dispositivos reais permanecem NOT_RUN.

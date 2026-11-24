@@ -50,3 +50,16 @@ Novos recursos: consulta de estoque sem holds expirados, limite de 5 holds simul
 Code SHA testado c0f85cd7f2d8be13c4216e7e3d90d1bf3e6ded72, CI https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45179829134 4/4 jobs PASS. Workerd+D1 **10/10 PASS** inclui transferência QR e admin UID read-only; backend SQLite 17/17 PASS, domínio 5/5 PASS, Chromium demo 6/6 PASS, typecheck/build/cf dry-run PASS. Nenhum recurso Firebase/D1 remoto conectado.
 
 Cobertura T001–T058 no documento UX: 26 sandbox-coded, 21 partial, 11 not implemented; 0 homologated remote. `docs/AS-BUILT-DIAGRAMS.md` descreve D001–D007 do código sem substituir diagramas conceituais. Próximo fluxo: staging isolado, PSP fake->provider real sandbox, QA authenticated/mobile, compliance/DR, revisão/merge com autorização. PR #1 mantém Draft.
+
+
+## S010 — 23/11/2026: nova rodada com CI validado
+
+**Ponto de retomada:** código `4d6b5a437548f161e80a1ffe230cb26c2cfbb44c` em `feature/rfb-starter-pack-v1`, PR #1 Draft. [CI 45305151761](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45305151761) quatro jobs PASS; Node SQLite 19, D1 Workerd 11, domínio 5, Vitest 15, Playwright demo 6 + sandbox público mockado 6, typecheck/build/cf dry run PASS.
+
+Novas implementações: catálogo `q/city/page` seguro, frontend de filtros, confirmação de estorno/transferência sandbox, recuperação e verificação de email pelo Firebase, FAQ, conta, feed in-app, histórico de entradas, checkin audit atômico, relatórios admin somente leitura, retry com requestId/requestKey estável, invalidação de respostas tardias após logout, câmera só com identidade+evento selecionados e SVG de marca V1 em preview.
+
+Cobertura de telas: 32 sandbox-coded, 23 partial, 3 not implemented. Ainda **nenhum E2E autenticado com Firebase real, D1 remoto, PSP sandbox financeiro real, hardware físico, backup/restore ou aceite integral**. No merge/deploy, sem recursos persistentes criados.
+
+**Próxima fatia concreta:** configurar **ambiente isolado** Firebase Auth+D1 staging após comprovação Free/autorizações e executar os 5 atores, dois scanners físicos, QR transfer/revoked, ingressos concorrentes e backups. Acessos, pagamento e publicação continuam bloqueados; não confundir CI mockado com homologação.
+
+Leia `PROJECT_STATUS.json`, `docs/QA-REPORT-2026-11-23-S010.md`, `docs/ACCEPTANCE-MATRIX.md` antes de editar.

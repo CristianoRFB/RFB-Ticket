@@ -74,3 +74,14 @@ Mudanças reais desta rodada:
 Inventário de telas T001–T058 atualizado em `docs/UX-DESIGN-AND-QA.md`: **26** mapeadas a código de sandbox, **21** parcialmente e **11** não implementadas; nenhum dos 58 IDs tem homologação autenticada remota. Criado `docs/AS-BUILT-DIAGRAMS.md` com sete fluxos/componentes do sistema efetivo; os 7 originais continuam como conceituais. A especificação original não foi sobrescrita.
 
 **Gates externos ainda BLOQUEADOS:** Firebase Auth real, D1 remoto, PSP sandbox real, aparelhos câmera, retenção LGPD, backup/restauração, produção. Nunca afirmar 100%.
+
+
+## S010 — 23/11/2026: implementações com testes de integração
+
+- HEAD de código verificado `4d6b5a437548f161e80a1ffe230cb26c2cfbb44c`. CI https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45305151761 — quatro jobs SUCCESS.
+- API: catálogo `q/city/page` (20/página, filtro SQL parametrizado, limites); check-ins/audit paginados; check-in e ação de auditoria na mesma transação; admin eventos/audit read-only sanitizados.
+- Frontend: filtro/busca, erros/retry, reserva retry idempotente, checkin retry idempotente, últimas entradas, recuperação email, conta, ajuda, atividade somente leitura, confirmações irreversíveis, proteção contra respostas tardias após troca de usuário, câmera guardada.
+- Design: `public/brand/icone.svg` integrado no modo demo/sandbox como preview de logo V1 ainda não aprovada.
+- QA: Node SQLite 19/19; Workerd D1 local 11/11; domínio 5/5; Vitest 15/15; Playwright demo 6/6; Playwright sandbox público mockado 6/6; tsc/build/cf dry-run/CF D1 local migration PASS.
+- UX T001–T058: 32 codificados no sandbox, 23 parciais, 3 ausentes; nenhum aceite E2E autenticado. Metodologia mantém alvo do usuário 90% **não comprovado**.
+- Infra remota, custo, identidade, pagamentos, câmera física, restauração e LGPD continuam NOT_RUN. Não houve merge/deploy e nenhum recurso pago foi criado.

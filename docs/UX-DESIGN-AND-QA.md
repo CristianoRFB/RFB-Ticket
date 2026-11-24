@@ -43,32 +43,32 @@ Outros arquivos do original: `design/desktop.svg`, `design/mobile.svg`, 8 PNG de
 |---|---|---|
 | T001 | Landing / apresentação | `PARTIAL_SANDBOX` |
 | T002 | Cadastro / criar conta | `PARTIAL_SANDBOX` |
-| T003 | Login e recuperar acesso | `PARTIAL_SANDBOX` |
-| T004 | Onboarding e perfil | `NOT_IMPLEMENTED` |
+| T003 | Login e recuperar acesso | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T004 | Onboarding e perfil | `PARTIAL_SANDBOX` |
 | T005 | Página principal / feed | `CODE_SANDBOX_NOT_E2E_REMOTE` |
-| T006 | Busca e filtros | `NOT_IMPLEMENTED` |
+| T006 | Busca e filtros | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T007 | Detalhes do recurso | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T008 | Fluxo de criação | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T009 | Fluxo de edição | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T010 | Confirmação / revisão | `PARTIAL_SANDBOX` |
 | T011 | Estado concluído / recibo | `PARTIAL_SANDBOX` |
 | T012 | Lista pessoal / histórico | `CODE_SANDBOX_NOT_E2E_REMOTE` |
-| T013 | Notificações | `NOT_IMPLEMENTED` |
+| T013 | Notificações | `PARTIAL_SANDBOX` |
 | T014 | Mensagens ou contato | `NOT_IMPLEMENTED` |
-| T015 | Central de ajuda | `NOT_IMPLEMENTED` |
-| T016 | Preferências e privacidade | `NOT_IMPLEMENTED` |
+| T015 | Central de ajuda | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T016 | Preferências e privacidade | `PARTIAL_SANDBOX` |
 | T017 | Acesso e segurança | `PARTIAL_SANDBOX` |
 | T018 | Página vazia / primeira vez | `PARTIAL_SANDBOX` |
 | T019 | Carregamento e skeleton | `PARTIAL_SANDBOX` |
-| T020 | Erro de rede / retentar | `PARTIAL_SANDBOX` |
+| T020 | Erro de rede / retentar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T021 | Sem permissão / bloqueio | `PARTIAL_SANDBOX` |
-| T022 | Estado de conflito concorrente | `PARTIAL_SANDBOX` |
+| T022 | Estado de conflito concorrente | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T023 | Admin: visão geral | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T024 | Admin: gestão de usuários | `NOT_IMPLEMENTED` |
-| T025 | Admin: moderação e auditoria | `NOT_IMPLEMENTED` |
+| T025 | Admin: moderação e auditoria | `PARTIAL_SANDBOX` |
 | T026 | Admin: regras e configurações | `NOT_IMPLEMENTED` |
 | T027 | Admin: relatórios | `CODE_SANDBOX_NOT_E2E_REMOTE` |
-| T028 | Página 404 / recurso indisponível | `NOT_IMPLEMENTED` |
+| T028 | Página 404 / recurso indisponível | `PARTIAL_SANDBOX` |
 | T029 | Módulo / Eventos — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T030 | Módulo / Eventos — detalhe | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T031 | Módulo / Eventos — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
@@ -87,8 +87,8 @@ Outros arquivos do original: `design/desktop.svg`, `design/mobile.svg`, 8 PNG de
 | T044 | Módulo / Leitor de QR — lista | `PARTIAL_SANDBOX` |
 | T045 | Módulo / Leitor de QR — detalhe | `PARTIAL_SANDBOX` |
 | T046 | Módulo / Leitor de QR — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
-| T047 | Módulo / Check-in — lista | `PARTIAL_SANDBOX` |
-| T048 | Módulo / Check-in — detalhe | `NOT_IMPLEMENTED` |
+| T047 | Módulo / Check-in — lista | `CODE_SANDBOX_NOT_E2E_REMOTE` |
+| T048 | Módulo / Check-in — detalhe | `PARTIAL_SANDBOX` |
 | T049 | Módulo / Check-in — criar/editar | `CODE_SANDBOX_NOT_E2E_REMOTE` |
 | T050 | Módulo / Reembolso — lista | `PARTIAL_SANDBOX` |
 | T051 | Módulo / Reembolso — detalhe | `PARTIAL_SANDBOX` |
@@ -127,3 +127,16 @@ Os 58 T-IDs referem-se a intenções de tela, **não 58 páginas separadas**. Ma
 - Falta em T003: recuperação de conta; T006: busca/filtros; T013–T016: notificações, contato, ajuda e preferências; T024–T026: ferramentas administrativas de gestão/moderação; T028: 404 dedicada; T048: detalhe individual de check-in. T001 é parcialmente coberta pelo shell do produto.
 - Foco após integrar Firebase/D1 em staging: T003, T006, T015, T019–T022, T028 e T047–T049 com QA física. Não gerar ferramentas administrativas sem aceite de RBAC/LGPD.
 - O widget câmera depende de `BarcodeDetector`, exige HTTPS/permissão e possui fallback manual. O Playwright atual valida somente a versão sintética não autenticada.
+
+## S010 — 23/11/2026: auditoria de código e UX do sandbox
+
+**Rastreabilidade:** 32 T-IDs possuem implementação de sandbox em rota/componente, 23 somente experiência parcial e 3 continuam sem implementação inicial (T014 mensagens/contato, T024 gestão de usuários admin, T026 regras/configuração admin). Mesmo os 32 codificados NÃO foram homologados com Firebase/D1 remotos. 55/58 têm algum suporte em código, o que **não** equivale a 95% de produto concluído.
+
+- T003: recuperação de senha por Firebase incorporada; T004: tela própria de conta e solicitação de verificação (onboarding incompleto).
+- T006: pesquisa de eventos por nome, descrição e cidade, paginação de 20 por API vinculada; T020/T022: erros/retry de rede e chaves idempotentes para reservas/check-ins.
+- T013: feed de atividade da conta, **somente leitura em app**, sem notificações push; T015: central de ajuda local; T016: privacidade da conta explicada, preferências ainda parciais.
+- T025: auditoria sanitizada de administração read-only, **sem moderação**; T028: mensagens de indisponibilidade parciais, não rota 404 dedicada.
+- T047/T048: portaria com histórico paginado por número do ticket e horário, detalhes parciais.
+- Ícone SVG da marca já versionado utilizado em demo e sandbox como **preview do conceito V1**, sem identidade final aprovada.
+
+**QA:** GitHub Actions [run 45305151761](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45305151761) aprovou frontend, API, Workerd D1 local e navegação Playwright em desktop/mobile. Testes de sandbox público usam Firebase sintético + API interceptada; **não são testes de compra/login autenticado real**. Screenshots oficiais de staging com dados sintéticos e dispositivos físicos ainda NOT_RUN.

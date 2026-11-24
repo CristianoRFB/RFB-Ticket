@@ -7,37 +7,37 @@
   "default_branch_baseline": "dbd16775e4b4f47a855fd67a736294421ee1f6b9",
   "working_branch": "feature/rfb-starter-pack-v1",
   "draft_pr": 1,
-  "last_reviewed_code_sha": "c0f85cd7f2d8be13c4216e7e3d90d1bf3e6ded72",
-  "stage": "G3_LOCAL_WORKER_D1_SANDBOX_TESTED_NOT_REMOTE_HOMOLOGATED",
-  "user_target_percent": 100,
+  "last_reviewed_code_sha": "4d6b5a437548f161e80a1ffe230cb26c2cfbb44c",
+  "stage": "G3_LOCAL_SANDBOX_EXPANDED_TESTED_REMOTE_AND_RELEASE_BLOCKED",
+  "user_target_percent": 90,
   "verified_completion_percent": null,
-  "features_code": "F01-F12 possuem implementação sandbox parcial; F04/F05/F10 explicitamente fictícios; consultar docs/ACCEPTANCE-MATRIX.md",
+  "features_code": "F01–F12 implementados em diferentes níveis de sandbox, sem homologação integral; F04/F05/F10 são fictícios. Rastrear docs/ACCEPTANCE-MATRIX.md.",
   "major_missing": [
-    "Firebase Authentication real não configurado (sem projectId/test users)",
-    "Cloudflare D1 remoto isolado não criado nem integrado (Workerd+D1 local passou)",
-    "Gateway de pagamento sandbox REAL não integrado; confirmação direta somente no modo fake",
-    "Leitor QR câmera iOS/Android não homologado em dispositivos físicos",
-    "58 T-IDs e 7 diagramas ainda não completos/homologados",
-    "Rate limit global por IP/Worker, anti-bot, incident response, logging de negativas e LGPD/retencao dependem revisão",
-    "Backup/restauração de D1, rollback, quotas/plano e monitoramento remoto não ensaiados",
-    "Testes E2E de login Firebase real, isolamento intertenant remoto, check-in em dois aparelhos e rede ruim não executados"
+    "Firebase Authentication real não configurado; apenas chaves e tokens de teste sintéticos no Workerd e VITE mock no browser",
+    "Cloudflare D1 remoto isolado não provisionado; testes só Workerd D1 local",
+    "Gateway financeiro externo em modo sandbox real não integrado; checkout/reembolso continuam fake",
+    "Leitor por câmera iOS/Android e operação de dois dispositivos reais não homologados",
+    "T001-T058: 32 com código sandbox, 23 parciais e 3 ausentes; nenhuma cobertura E2E autenticada real",
+    "Rate limiting global por IP e antifraude, privacidade LGPD/retencao, backup/restauração remotos e alertas não homologados",
+    "Plano Free e quotas da conta alvo não verificadas; sem aprovação para qualquer cobrança ou implantação pública"
   ],
   "tests": {
-    "backend_node_sqlite": "PASS_17_OF_17_NODE24_GITHUB_ACTIONS",
-    "domain": "PASS_5_OF_5_NODE24_GITHUB_ACTIONS",
-    "workerd_d1_local": "PASS_10_OF_10_REAL_MINIFLARE_D1_NODE24",
-    "vitest_frontend": "PASS_2_OF_2",
-    "playwright_demo_chromium": "PASS_6_OF_6_DESKTOP_MOBILE",
-    "cloudflare_dry_run": "PASS_CF_DEPLOY_DRY_RUN_NO_API",
+    "backend_node_sqlite": "PASS_19_OF_19_NODE24",
+    "domain": "PASS_5_OF_5_NODE24",
+    "workerd_d1_local": "PASS_11_OF_11_MINIFLARE_WORKERD_D1_NODE24",
+    "vitest_frontend": "PASS_15_OF_15",
+    "playwright_demo_chromium": "PASS_6_OF_6",
+    "cloudflare_dry_run": "PASS_NO_DEPLOY",
     "cf_d1_migration_local": "PASS_SYNTHETIC_UUID",
     "build_typecheck": "PASS_NODE24",
-    "github_actions": "PASS_4_JOBS_PER_RUN_AT_C0F85",
-    "github_actions_run": 45179829134,
+    "github_actions": "PASS_4_OF_4_JOBS",
+    "github_actions_run": 45305151761,
     "remote_firebase": "NOT_RUN",
     "remote_d1": "NOT_RUN",
     "physical_device": "NOT_RUN",
     "payment_provider": "NOT_RUN",
-    "browser_last_known": "PASS_6_OF_6_DEMO_AT_C0F85"
+    "browser_last_known": "PASS_6_OF_6_DEMO_AT_C0F85",
+    "playwright_sandbox_public_mocked": "PASS_6_OF_6_FAKE_FIREBASE_CONFIG_MOCKED_API"
   },
   "cloudflare": {
     "account_read_only_audited": true,
@@ -56,7 +56,7 @@
   "production": false,
   "no_merge": true,
   "no_billing": true,
-  "next_action": "Deploy an isolated test environment only after Firebase and Cloudflare Free plan and approval verified. Run authenticated real user E2E (all 5 roles), D1 remote concurrency, camera devices, backup recovery, formal F01-F12 and screen acceptance; gateway vendor sandbox still missing.",
+  "next_action": "Sem merge/deploy: primeiro validar Free quotas, projeto Firebase Authentication exclusivo e banco D1 staging isolado com permissão; então executar usuários reais fictícios, corrida D1 remota, câmera Android/iOS, recuperação de falhas, PSP sandbox real, backup/restore, LGPD e aceites F01–F12/T001–T058.",
   "scope_details": {
     "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
     "F05_webhook": "FAKE_PROVIDER_SIGNED_WEBHOOK_IMPLEMENTED_LOCAL_NO_REAL_GATEWAY",
@@ -72,29 +72,35 @@
     "base_main": "UNCHANGED"
   },
   "code_features": {
-    "F01": "SANDBOX_EVENT_CRUD_PUBLICATION_LOCAL_TESTED",
-    "F02": "ATOMIC_STOCK_CAP_5_ACTIVE_HOLDS_LOCAL_TESTED",
+    "F01": "CATALOG_EVENT_CRUD_PAGINATED_PARAMETERIZED_SEARCH_LOCAL_TESTED",
+    "F02": "CAPACITY_ATOMIC_D1_HOLD_LIMIT_AND_CLIENT_RETRY_IDEMPOTENCY_LOCAL_TESTED",
     "F03": "AUTOINCREMENT_TICKET_NUMBERS_LOCAL_TESTED",
     "F04": "SANDBOX_FAKE_ONLY",
     "F05": "HMAC_FAKE_PROVIDER_WEBHOOK_LOCAL_TESTED_REAL_GATEWAY_NOT_DONE",
     "F06": "HMAC_SIGNED_ROTATABLE_QR_LOCAL_TESTED",
-    "F07": "ONE_USE_ATOMIC_D1_LOCAL_CONCURRENCY_TESTED",
-    "F08": "ROLE_GATE_SCANNER_MEMOIZED_DEVICE_UNVERIFIED",
-    "F09": "STATS_OWNER_ONLY_CSV_5000_LOCAL_TESTED",
+    "F07": "SINGLE_USE_ATOMIC_CHECKIN_AND_AUDIT_PLUS_STABLE_RETRY_KEY_LOCAL_TESTED",
+    "F08": "EVENT_SCOPED_GATE_CAMERA_GUARDED_RECENT_ENTRIES_PAGINATED_PHYSICAL_NOT_RUN",
+    "F09": "OWNER_STATS_PRIVATE_CSV_PAGINATED_GATE_REPORT_LOCAL_TESTED",
     "F10": "CANCEL_REFUND_FAKE_ATOMIC_CAPACITY_RELEASE_LOCAL_TESTED",
-    "F11": "ONE_TIME_TRANSFER_QR_ROTATION_WORKERD_D1_TESTED",
-    "F12": "AUDIT_WRITES_LOCAL_TESTED_PRIVACY_POLICY_PENDING"
+    "F11": "ONE_TIME_TRANSFER_TOKEN_ROTATION_WITH_UI_CONFIRMATION_LOCAL_TESTED",
+    "F12": "ATOMIC_CHECKIN_AUDIT_ADMIN_READONLY_SANITIZED_PAGINATION_LOCAL_TESTED"
   },
   "screens": {
     "total_catalogued": 58,
-    "code_sandbox_only": 26,
-    "partial_sandbox": 21,
-    "not_implemented": 11,
-    "live_authenticated_browser_qa": "NOT_RUN"
+    "code_sandbox_only": 32,
+    "partial_sandbox": 23,
+    "not_implemented": 3,
+    "live_authenticated_browser_qa": "NOT_RUN",
+    "public_sandbox_mocked_browser": "PASS_6_OF_6"
   },
   "diagrams": {
     "original_drafts": 7,
     "new_as_built_mermaid": 7,
     "homologated": false
+  },
+  "brand": {
+    "ticket_icon_svg_integrated_in_demo_and_sandbox": true,
+    "logo_approval": "PENDING_CONCEPT_V1",
+    "favicon": "NOT_DONE"
   }
 }

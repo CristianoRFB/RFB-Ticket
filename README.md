@@ -93,3 +93,14 @@ Capturas reais serão adicionadas após QA desktop/mobile em staging local com d
   
   <sub>Desenvolvido por RFB · assinatura do criador, independente da marca do aplicativo.</sub>
 </div>
+
+
+## Status S010 — RFB Method / 23/11/2026
+
+Integração incremental validada no [CI 45305151761](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45305151761) (4/4 jobs PASS): API 19, Workerd+D1 local 11, domínio 5, Vitest 15, Playwright demo 6 e Playwright público mockado 6. Código de referência `4d6b5a437548f161e80a1ffe230cb26c2cfbb44c`.
+
+A interface de sandbox inclui busca e paginação de eventos, reserva com retry idempotente, tickets e QR versionado, portaria online com histórico paginado, relatórios, cancelamento/reembolso **fictícios**, transferência com confirmação, ajuda, recuperação e verificação de email, página de conta, feed de atividade em-app, admin somente leitura com auditoria sanitizada. O ícone [SVG de marca V1](public/brand/icone.svg) foi conectado como **preview não aprovado**.
+
+[Relatório QA S010](docs/QA-REPORT-2026-11-23-S010.md) · [Matriz F01–F12](docs/ACCEPTANCE-MATRIX.md) · [T001–T058](docs/UX-DESIGN-AND-QA.md) · [Segurança/Operações](docs/SECURITY-AND-OPERATIONS-S010.md).
+
+**Meta de 90% pedida, não validada:** 32 telas mapeadas a código sandbox, 23 parciais, 3 sem código inicial; sistema ainda precisa autenticação Firebase real, D1 remoto, PSP sandbox, câmera física, LGPD/backup e aceites. Não usar com eventos ou dinheiro reais. Sem deploy, billing ou merge.
