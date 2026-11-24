@@ -50,8 +50,22 @@ export async function handleApi(request,env) {
     const url=new URL(request.url),path=url.pathname,method=request.method;
     // Public catalog (only published records; no personal information).
     if(method==='GET' && path==='/api/events') {
-      const result=await env.DB.prepare("SELECT id,title,description,city,starts_at,status FROM events WHERE status='published' ORDER BY starts_at LIMIT 100").all();
-      return ok({events:result.results||[]});
+      // Paginated server-side discovery; bound parameters prevent SQL injection and
+      // instr() treats %/_ as literal text rather than wildcard patterns.
+      const search=(new URL(request.url)).searchParams;
+      const query=(search.get('q')||'').trim(),city=(search.get('city')||'').trim();
+      const pageText=search.get('page')||'1';
+      if(query.length>100||city.length>100||!/^[1-9][0-9]{0,3}$/.test(pageText))bad('INVALID_SEARCH',400);
+      const page=Number(pageText),size=20;
+      const result=await env.DB.prepare(`SELECT id,title,description,city,starts_at,status
+        FROM events WHERE status='published'
+        AND (?='' OR instr(lower(title),lower(?))>0 OR instr(lower(description),lower(?))>0)
+        OR instr(lower(city),lower(?))>0)
+        AND (?='' OR instr(lower(city),lower(?))>0)
+        ORDER BY starts_at ASC,id ASC LIMIT ? OFFSET ?`)
+        .bind(query,query,query,query,city,city,size+1,(page-1)*size).all();
+      const rows=result.results||[];
+      return ok({events:rows.slice(0,size),page,hasMore:rows.length>size});
     }
     const evDetail=/^\/api\/events\/([^/]+)$/.exec(path);
     if(method==='GET' && evDetail) {
