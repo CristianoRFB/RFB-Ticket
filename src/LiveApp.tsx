@@ -247,7 +247,7 @@ export default function LiveApp() {
   if(isAdmin)nav.push(['admin','Administração']);
   if(user)nav.push(['atividade','Atividade'],['conta','Conta']);
   return <div className="live-shell">
-    <header className="live-header"><div><p className="live-kicker">RFB LABS / ACESSO A EVENTOS</p><h1>RFBTicket <span>Sandbox</span></h1><p>Bilheteria de demonstração com validação online. Sem pagamentos reais.</p></div>
+    <header className="live-header"><div><p className="live-kicker">RFB LABS / ACESSO A EVENTOS</p><h1 className="live-brand-title"><img src="/brand/icone.svg" alt="" aria-hidden="true" width="58" height="58"/>RFBTicket <span>Sandbox</span></h1><p>Bilheteria de demonstração com validação online. Sem pagamentos reais.</p></div>
       <div className="live-identity">{user?<><span title="UID do Firebase">UID: {user.uid}</span><button type="button" className="live-secondary" onClick={()=>firebaseAuth&&signOut(firebaseAuth)}>Sair</button></>:<span>Visitante — autentique para operar</span>}</div>
     </header>
     {!user && <AuthPanel onDone={()=>setMessage('Autenticação concluída.')}/>}
