@@ -51,3 +51,23 @@ test('empty result and no horizontal overflow in public sandbox UI',async({page}
  const width=await page.evaluate(()=>({page:document.documentElement.scrollWidth,viewport:window.innerWidth}));
  expect(width.page).toBeLessThanOrEqual(width.viewport+1);
 });
+
+
+test('public sandbox retries after a temporary API failure without inventing events',async({page})=>{
+ let attempts=0;
+ await page.route(/\/api\/events\?page=1$/,async route=>{
+   attempts++;
+   if(attempts===1){
+     await route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'SERVICE_UNAVAILABLE'})});
+   }else{
+     await route.fulfill({status:200,contentType:'application/json',
+       body:JSON.stringify({events:[rows[0]],page:1,hasMore:false})});
+   }
+ });
+ await page.getByRole('button',{name:'Buscar'}).click();
+ await expect(page.getByRole('alert')).toContainText('Não foi possível carregar o catálogo');
+ await page.getByRole('button',{name:'Tentar novamente'}).click();
+ await expect(page.getByRole('button',{name:/Festival Aurora QA/})).toBeVisible();
+ await expect(page.getByRole('alert')).toHaveCount(0);
+ expect(attempts).toBe(2);
+});
