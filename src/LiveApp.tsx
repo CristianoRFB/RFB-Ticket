@@ -5,10 +5,12 @@ import { firebaseAuth } from './firebase';
 import { api, displayDate, money, type TicketEvent, type Lot, type Order, type Ticket, type EventDetail, type EventStats } from './api';
 import QR from './QR';
 import {selectCheckinAttempt, type CheckinAttempt} from './checkinRequest';
+import {selectReservationAttempt, type ReservationAttempt} from './reservationRequest';
+import {errorMessage} from './errorMessages';
 
 type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador'|'admin'|'ajuda'|'conta';
 type Report = {stats:EventStats;financials:string};
-function errorText(e: unknown) {return e instanceof Error ? e.message : 'Erro inesperado';}
+function errorText(e: unknown) {return errorMessage(e);}
 function AuthPanel({onDone}:{onDone:()=>void}) {
   const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[creating,setCreating]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
   async function submit(e:FormEvent) {e.preventDefault();if(!firebaseAuth)return;setBusy(true);setMessage('');try{
@@ -76,6 +78,7 @@ export default function LiveApp() {
   const [orders,setOrders]=useState<Order[]>([]),[tickets,setTickets]=useState<Ticket[]>([]),[report,setReport]=useState<Report|null>(null);
   const [quantity,setQuantity]=useState(1),[lotId,setLotId]=useState(''),[token,setToken]=useState(''),[scanEvent,setScanEvent]=useState('');
   const pendingCheckin=useRef<CheckinAttempt|null>(null);
+  const pendingReservation=useRef<ReservationAttempt|null>(null);
   const [gateActivity,setGateActivity]=useState<Array<{ticket_number:number;created_at:number}>>([]);
   const [gatePage,setGatePage]=useState(1),[gateHasMore,setGateHasMore]=useState(false),[gateBusy,setGateBusy]=useState(false),[gateError,setGateError]=useState('');
   const [isAdmin,setIsAdmin]=useState(false),[adminReport,setAdminReport]=useState<{total_events:number;published_events:number;total_lots:number;sandbox_orders:number;issued_tickets:number;completed_checkins:number}|null>(null);
@@ -118,11 +121,19 @@ export default function LiveApp() {
   async function buy() {if(!user||!lotId||!detail)return;
     const selected=detail.lots.find(l=>l.id===lotId);
     if(!selected||selected.status!=='available'||selected.available<quantity){setMessage('Lote esgotado ou quantidade inválida. Atualize a disponibilidade.');return;}
+    const attempt=selectReservationAttempt(pendingReservation.current,lotId,quantity);
+    pendingReservation.current=attempt;
     await run(async()=>{
-    const result=await api<{order:Order}>('/api/orders',user,'POST',{lotId,quantity,requestKey:crypto.randomUUID()});
-    setMessage('Reserva sandbox criada. Você pode emitir ingressos simulados na aba Pedidos. Nenhum dinheiro foi cobrado.');
-    setTab('pedidos');await refresh();
-  });}
+      const result=await api<{order:Order;replayed?:boolean}>('/api/orders',user,'POST',{
+        lotId:attempt.lotId,quantity:attempt.quantity,requestKey:attempt.requestKey
+      });
+      await refresh();
+      pendingReservation.current=null;
+      setTab('pedidos');
+      setMessage(result.replayed?'Reserva anterior localizada após a tentativa de conexão. Nenhuma vaga adicional foi bloqueada.':
+        'Reserva sandbox criada. Confirme na aba Pedidos. Nenhum dinheiro foi cobrado.');
+    });
+  }
   async function orderAction(id:string,operation:'sandbox-confirm'|'cancel'|'refund') {if(!user)return;await run(async()=>{
     await api('/api/orders/'+id+'/'+operation,user,'POST',{});await refresh();
     setMessage(operation==='sandbox-confirm'?'Credenciais sandbox emitidas. Sem pagamento real.':operation==='refund'?'Reembolso fictício registrado. Nenhum dinheiro devolvido.':'Reserva cancelada.');
