@@ -16,7 +16,8 @@
     "deploy:sandbox": "cf deploy",
     "dev:demo": "vite --config vite.demo.config.ts",
     "test:e2e": "playwright test",
-    "test:workerd": "node --test tests/workerd.node-test.mjs"
+    "test:workerd": "node --test tests/workerd.node-test.mjs",
+    "test:e2e:sandbox": "playwright test --config playwright.sandbox.config.ts"
   },
   "dependencies": {
     "react": "^19.0.0",
