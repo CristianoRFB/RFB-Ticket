@@ -71,6 +71,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Real browser QA (synthetic demo only)
         run: npm run test:e2e
+      - name: Public sandbox UI QA (fake Firebase config + mocked API, no real users)
+        run: npm run test:e2e:sandbox
       - name: Retain failure artifacts (synthetic fixtures)
         if: failure()
         uses: actions/upload-artifact@v4
