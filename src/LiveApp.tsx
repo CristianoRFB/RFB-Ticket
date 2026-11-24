@@ -4,6 +4,7 @@ import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndP
 import { firebaseAuth } from './firebase';
 import { api, displayDate, money, type TicketEvent, type Lot, type Order, type Ticket, type EventDetail, type EventStats } from './api';
 import QR from './QR';
+import {selectCheckinAttempt, type CheckinAttempt} from './checkinRequest';
 
 type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador'|'admin'|'ajuda'|'conta';
 type Report = {stats:EventStats;financials:string};
@@ -74,6 +75,9 @@ export default function LiveApp() {
   const [managed,setManaged]=useState<TicketEvent[]>([]),[manageId,setManageId]=useState(''),[manageDetail,setManageDetail]=useState<EventDetail|null>(null);
   const [orders,setOrders]=useState<Order[]>([]),[tickets,setTickets]=useState<Ticket[]>([]),[report,setReport]=useState<Report|null>(null);
   const [quantity,setQuantity]=useState(1),[lotId,setLotId]=useState(''),[token,setToken]=useState(''),[scanEvent,setScanEvent]=useState('');
+  const pendingCheckin=useRef<CheckinAttempt|null>(null);
+  const [gateActivity,setGateActivity]=useState<Array<{ticket_number:number;created_at:number}>>([]);
+  const [gatePage,setGatePage]=useState(1),[gateHasMore,setGateHasMore]=useState(false),[gateBusy,setGateBusy]=useState(false),[gateError,setGateError]=useState('');
   const [isAdmin,setIsAdmin]=useState(false),[adminReport,setAdminReport]=useState<{total_events:number;published_events:number;total_lots:number;sandbox_orders:number;issued_tickets:number;completed_checkins:number}|null>(null);
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[newEventTitle,setNewEventTitle]=useState(''),[newEventCity,setNewEventCity]=useState(''),[newEventDate,setNewEventDate]=useState('');
   const [newLotLabel,setNewLotLabel]=useState(''),[newLotCapacity,setNewLotCapacity]=useState(40),[newLotPrice,setNewLotPrice]=useState(2500),[staffUid,setStaffUid]=useState(''),[transferTarget,setTransferTarget]=useState<Record<string,string>>({});
@@ -99,7 +103,7 @@ export default function LiveApp() {
   }
   useEffect(()=>{refresh(user).catch(e=>setMessage(errorText(e)));},[user]);
   async function run(action:()=>Promise<void>) {setBusy(true);setMessage('');try{await action();}catch(e){setMessage(errorText(e));}finally{setBusy(false);}}
-  async function openEvent(id:string) {await run(async()=>{setLotId('');const data=await api<EventDetail>('/api/events/'+id,null);setDetail(data);});}
+  async function openEvent(id:string) {await run(async()=>{setLotId('');setDetail(null);const data=await api<EventDetail>('/api/events/'+id,null);setDetail(data);});}
   async function searchCatalog(e:FormEvent) {
     e.preventDefault();setDetail(null);setLotId('');
     await loadCatalog(searchText.trim(),searchCity.trim(),1);
@@ -111,7 +115,10 @@ export default function LiveApp() {
   async function catalogGo(page:number) {
     setDetail(null);setLotId('');await loadCatalog(catalogFilters.current.q,catalogFilters.current.city,page);
   }
-  async function buy() {if(!user||!lotId)return;await run(async()=>{
+  async function buy() {if(!user||!lotId||!detail)return;
+    const selected=detail.lots.find(l=>l.id===lotId);
+    if(!selected||selected.status!=='available'||selected.available<quantity){setMessage('Lote esgotado ou quantidade inválida. Atualize a disponibilidade.');return;}
+    await run(async()=>{
     const result=await api<{order:Order}>('/api/orders',user,'POST',{lotId,quantity,requestKey:crypto.randomUUID()});
     setMessage('Reserva sandbox criada. Você pode emitir ingressos simulados na aba Pedidos. Nenhum dinheiro foi cobrado.');
     setTab('pedidos');await refresh();
@@ -123,18 +130,38 @@ export default function LiveApp() {
   async function transfer(ticketId:string) {if(!user)return;const toUid=transferTarget[ticketId];if(!toUid)return;await run(async()=>{
     await api('/api/tickets/'+ticketId+'/transfer',user,'POST',{toUid});await refresh();setMessage('Ingresso transferido; o QR anterior foi invalidado.');
   });}
+  const loadGateActivity=useCallback(async (eventId:string,page=1)=>{
+    if(!user||!eventId)return;
+    setGateBusy(true);setGateError('');
+    try{
+      const response=await api<{checkins:Array<{ticket_number:number;created_at:number}>;page:number;hasMore:boolean}>(
+        '/api/events/'+eventId+'/checkins?page='+page,user);
+      setGateActivity(response.checkins);setGatePage(response.page);setGateHasMore(response.hasMore);
+    }catch(e){setGateError('Não foi possível consultar as entradas: '+errorText(e));}
+    finally{setGateBusy(false);}
+  },[user]);
+  useEffect(()=>{
+    if(!scanEvent||!user){setGateActivity([]);setGatePage(1);setGateHasMore(false);setGateError('');return;}
+    void loadGateActivity(scanEvent,1);
+  },[scanEvent,user,loadGateActivity]);
   const checkin=useCallback(async (value:string):Promise<boolean>=> {
     if(!user||!scanEvent||!value.trim()){setMessage('Selecione o evento e informe o token.');return false;}
+    const attempt=selectCheckinAttempt(pendingCheckin.current,scanEvent,value);
+    pendingCheckin.current=attempt;
     setBusy(true);setMessage('');
     try {
-      const result=await api<{result:string;replayed:boolean}>('/api/checkin',user,'POST',{eventId:scanEvent,token:value.trim(),requestId:crypto.randomUUID()});
+      const result=await api<{result:string;replayed:boolean}>('/api/checkin',user,'POST',{
+        eventId:scanEvent,token:attempt.token,requestId:attempt.requestId
+      });
       if(result.result!=='OK'){setMessage('ENTRADA RECUSADA (SANDBOX).');return false;}
-      setMessage('ENTRADA APROVADA (SANDBOX). Segunda entrada independente será bloqueada.');
+      pendingCheckin.current=null;
+      setMessage(result.replayed?'ENTRADA CONFIRMADA: tentativa já processada.':'ENTRADA APROVADA (SANDBOX). Segunda entrada independente será bloqueada.');
       setToken('');
+      void loadGateActivity(scanEvent,1);
       return true;
-    }catch(e){setMessage('ENTRADA BLOQUEADA: '+errorText(e));return false;}
+    }catch(e){setMessage('ENTRADA BLOQUEADA: '+errorText(e)+'. Se a conexão falhou, repita a leitura para verificar o resultado.');return false;}
     finally{setBusy(false);}
-  },[user,scanEvent]);
+  },[user,scanEvent,loadGateActivity]);
   async function reloadManaged(id:string) {
     if(!user)return;
     const d=await api<EventDetail>('/api/manage/events/'+id,user);
@@ -185,6 +212,7 @@ export default function LiveApp() {
   });}
   const [cancelArmed,setCancelArmed]=useState(false);
   const isEventOwner=!!user && !!manageDetail && manageDetail.event.organizer_uid===user.uid;
+  const selectedLot=detail?.lots.find(l=>l.id===lotId);
   const nav:[Tab,string][]=[['explorar','Eventos'],['pedidos','Pedidos'],['ingressos','Meus ingressos'],['portaria','Portaria'],['organizador','Organizador'],['ajuda','Ajuda']];
   if(isAdmin)nav.push(['admin','Administração']);
   if(user)nav.push(['conta','Conta']);
@@ -213,8 +241,10 @@ export default function LiveApp() {
         </div>}
       </section>
       <section className="live-panel"><h2>{detail?detail.event.title:'Escolha um evento'}</h2>{detail?<><p>{detail.event.description}</p><p>{detail.event.city} · {displayDate(detail.event.starts_at)}</p>
-        <h3>Lotes</h3>{detail.lots.map(l=><button type="button" className="live-option" key={l.id} aria-pressed={lotId===l.id} disabled={l.status!=='available'||l.available<=0} onClick={()=>setLotId(l.id)}><strong>{l.label} — {money(l.price_cents)}</strong><span>{l.available} vagas · {l.status}</span></button>)}
-        <div className="live-actions"><label>Quantidade <select value={quantity} onChange={e=>setQuantity(Number(e.target.value))}>{[1,2,3,4].map(n=><option key={n} value={n}>{n}</option>)}</select></label><button disabled={!user||!lotId||busy} onClick={buy}>Reservar 10 min (sandbox)</button></div>
+        <h3>Lotes</h3>{detail.lots.map(l=><button type="button" className="live-option" key={l.id} aria-pressed={lotId===l.id} disabled={l.status!=='available'||l.available<=0} onClick={()=>{setLotId(l.id);setQuantity(1);}}><strong>{l.label} — {money(l.price_cents)}</strong><span>{l.available} vagas · {l.status}</span></button>)}
+        <div className="live-actions"><label>Quantidade <select value={quantity} onChange={e=>setQuantity(Number(e.target.value))}>{[1,2,3,4].map(n=><option key={n} value={n}>{n}</option>)}</select></label><button disabled={!user||!selectedLot||selectedLot.status!=='available'||quantity>selectedLot.available||busy} onClick={buy}>Reservar 10 min (sandbox)</button>
+        <button type="button" className="live-secondary" disabled={busy} onClick={()=>openEvent(detail.event.id)}>Atualizar vagas</button></div>
+        {selectedLot&&<p className="live-hint">Total fictício: <strong>{money(selectedLot.price_cents*quantity)}</strong> · {selectedLot.available} vagas disponíveis. Nenhum valor será cobrado.</p>}
         {!user&&<p>Entre com uma conta para reservar.</p>}</>:<p>Escolha um evento publicado para ver os ingressos.</p>}</section>
     </main>}
     {tab==='pedidos' && <main className="live-panel"><h2>Meus pedidos</h2>{!user&&<p>Entre para acessar seus pedidos.</p>}{user&&!orders.length&&<p>Você ainda não criou pedidos.</p>}
@@ -229,6 +259,14 @@ export default function LiveApp() {
       <label>Evento da portaria <select value={scanEvent} onChange={e=>setScanEvent(e.target.value)}><option value="">Selecione</option>{managed.map(e=><option key={e.id} value={e.id}>{e.title}</option>)}</select></label>
       <GateScanner onScan={checkin}/><form onSubmit={e=>{e.preventDefault();checkin(token);}}><label>Código QR / token manual <textarea rows={3} value={token} onChange={e=>setToken(e.target.value)} placeholder="Cole o código do ingresso sandbox" required/></label><button disabled={!user||!scanEvent||!token||busy} type="submit">Validar entrada</button></form>
       <p className="live-hint">Offline: nunca assumir entrada aprovada. Sem permissão: acesso negado no servidor.</p>
+      <section className="live-gate-history" aria-label="Histórico de entradas recentes">
+        <div className="live-actions"><h3>Últimas entradas</h3><button type="button" className="live-secondary" disabled={!scanEvent||gateBusy} onClick={()=>scanEvent&&loadGateActivity(scanEvent,1)}>Atualizar</button></div>
+        {gateBusy&&<p role="status">Consultando entradas…</p>}
+        {gateError&&<p role="alert">{gateError}</p>}
+        {!gateBusy&&!gateError&&!gateActivity.length&&<p>Nenhuma entrada registrada neste evento.</p>}
+        <ol>{gateActivity.map(row=><li key={row.ticket_number}><strong>Ingresso #{String(row.ticket_number).padStart(6,'0')}</strong><time dateTime={new Date(row.created_at*1000).toISOString()}>{new Date(row.created_at*1000).toLocaleString('pt-BR')}</time></li>)}</ol>
+        <div className="live-pagination"><button type="button" className="live-secondary" disabled={gateBusy||gatePage===1||!scanEvent} onClick={()=>scanEvent&&loadGateActivity(scanEvent,gatePage-1)}>Anterior</button><span>Página {gatePage}</span><button type="button" className="live-secondary" disabled={gateBusy||!gateHasMore||!scanEvent} onClick={()=>scanEvent&&loadGateActivity(scanEvent,gatePage+1)}>Próxima</button></div>
+      </section>
     </main>}
     {tab==='organizador' && <main className="live-columns"><section className="live-panel"><h2>Seus eventos</h2>
       <form className="live-form" onSubmit={createEvent}><h3>Criar evento</h3><label>Título <input required maxLength={140} value={newEventTitle} onChange={e=>setNewEventTitle(e.target.value)}/></label><label>Cidade <input required value={newEventCity} onChange={e=>setNewEventCity(e.target.value)}/></label><label>Data <input required type="datetime-local" value={newEventDate} onChange={e=>setNewEventDate(e.target.value)}/></label><button type="submit" disabled={!user||busy}>Criar rascunho</button></form>
