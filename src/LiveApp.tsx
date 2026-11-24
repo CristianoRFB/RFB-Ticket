@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signOut } from 'firebase/auth';
 import { firebaseAuth } from './firebase';
 import { api, displayDate, money, type TicketEvent, type Lot, type Order, type Ticket, type EventDetail, type EventStats } from './api';
 import QR from './QR';
@@ -86,6 +86,7 @@ export default function LiveApp() {
   const [adminEventPage,setAdminEventPage]=useState(1),[adminEventMore,setAdminEventMore]=useState(false),[adminAuditPage,setAdminAuditPage]=useState(1),[adminAuditMore,setAdminAuditMore]=useState(false);
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[newEventTitle,setNewEventTitle]=useState(''),[newEventCity,setNewEventCity]=useState(''),[newEventDate,setNewEventDate]=useState('');
   const [newLotLabel,setNewLotLabel]=useState(''),[newLotCapacity,setNewLotCapacity]=useState(40),[newLotPrice,setNewLotPrice]=useState(2500),[staffUid,setStaffUid]=useState(''),[transferTarget,setTransferTarget]=useState<Record<string,string>>({});
+  const [refundArmed,setRefundArmed]=useState<string|null>(null),[transferArmed,setTransferArmed]=useState<string|null>(null);
   const [editTitle,setEditTitle]=useState(''),[editCity,setEditCity]=useState(''),[editDescription,setEditDescription]=useState(''),[editDate,setEditDate]=useState('');
   const userRef=useRef<User|null>(user);userRef.current=user;
   useEffect(()=>firebaseAuth ? onAuthStateChanged(firebaseAuth,u=>{setUser(u);setMessage('');}) : undefined,[]);
@@ -199,6 +200,9 @@ export default function LiveApp() {
   async function doManage(path:string,body:unknown={}) {if(!user||!manageId)return;await run(async()=>{
     await api('/api/events/'+manageId+'/'+path,user,'POST',body);await refresh();await reloadManaged(manageId);setMessage('Operação de organização concluída.');
   });}
+  async function verifyEmail() {if(!user)return;await run(async()=>{
+    await sendEmailVerification(user);setMessage('Se o envio foi permitido pelo Firebase, verifique seu e-mail para concluir a validação da conta.');
+  });}
   async function downloadCheckins() {if(!user||!manageId)return;await run(async()=>{
     const response=await fetch('/api/events/'+manageId+'/checkins.csv',{
       headers:{Authorization:'Bearer '+await user.getIdToken()},credentials:'omit'
@@ -274,11 +278,15 @@ export default function LiveApp() {
     </main>}
     {tab==='pedidos' && <main className="live-panel"><h2>Meus pedidos</h2>{!user&&<p>Entre para acessar seus pedidos.</p>}{user&&!orders.length&&<p>Você ainda não criou pedidos.</p>}
       {orders.map(o=><div className="live-listitem" key={o.id}><div><strong>Pedido {o.id.slice(0,8)}</strong><span>{o.quantity} ingressos · {money(o.amount_cents)} · {o.status}</span>{o.status==='held'&&<small>Expira em {new Date(o.hold_expires_at*1000).toLocaleString('pt-BR')}</small>}</div>
-        <div className="live-actions">{o.status==='held'&&<><button disabled={busy} onClick={()=>orderAction(o.id,'sandbox-confirm')}>Confirmar pagamento fictício</button><button className="live-secondary" disabled={busy} onClick={()=>orderAction(o.id,'cancel')}>Cancelar reserva</button></>}{o.status==='issued'&&<button className="live-secondary" disabled={busy} onClick={()=>orderAction(o.id,'refund')}>Reembolso sandbox</button>}</div></div>)}
+        <div className="live-actions">{o.status==='held'&&<><button disabled={busy} onClick={()=>orderAction(o.id,'sandbox-confirm')}>Confirmar pagamento fictício</button><button className="live-secondary" disabled={busy} onClick={()=>orderAction(o.id,'cancel')}>Cancelar reserva</button></>}{o.status==='issued'&&<><button type="button" className="live-secondary" disabled={busy} onClick={()=>setRefundArmed(x=>x===o.id?null:o.id)}>{refundArmed===o.id?'Manter ingresso':'Solicitar reembolso fictício'}</button>
+          {refundArmed===o.id&&<button type="button" disabled={busy} onClick={()=>{setRefundArmed(null);void orderAction(o.id,'refund');}}>Confirmar revogação irreversível do QR</button>}</>}</div></div>)}
     </main>}
     {tab==='ingressos' && <main className="live-panel"><h2>Credenciais sandbox</h2>{!tickets.length&&<p>Nenhum ingresso emitido nesta conta.</p>}
       <div className="live-ticket-grid">{tickets.map(t=><article key={t.id} className="live-ticket"><p className="live-kicker">INGRESSO / {t.status.toUpperCase()}</p><h3>Ingresso #{String(t.ticket_number).padStart(6,'0')}</h3>{t.token?<QR value={t.token}/>:<p>Credencial indisponível: utilizada ou revogada.</p>}
-        {t.status==='issued'&&<div className="transfer-form"><label>Transferir para UID Firebase <input placeholder="UID de destino" value={transferTarget[t.id]||''} onChange={e=>setTransferTarget(x=>({...x,[t.id]:e.target.value}))}/></label><button className="live-secondary" disabled={busy} onClick={()=>transfer(t.id)}>Transferir e revogar QR antigo</button></div>}</article>)}</div>
+        {t.status==='issued'&&<div className="transfer-form"><label>Transferir para UID Firebase <input placeholder="UID de destino" value={transferTarget[t.id]||''} onChange={e=>setTransferTarget(x=>({...x,[t.id]:e.target.value}))}/></label><button type="button" className="live-secondary" disabled={busy||!transferTarget[t.id]?.trim()} onClick={()=>setTransferArmed(x=>x===t.id?null:t.id)}>{transferArmed===t.id?'Cancelar transferência':'Revisar transferência'}</button>
+          {transferArmed===t.id&&<div role="group" aria-label="Confirmação de transferência"><p>O ingresso será transferido para UID {transferTarget[t.id]?.trim()} e o QR atual será invalidado. Esta ação só pode ocorrer uma vez.</p>
+            <button type="button" disabled={busy||!transferTarget[t.id]?.trim()} onClick={()=>{setTransferArmed(null);void transfer(t.id);}}>Confirmar transferência</button>
+          </div>}</div>}</article>)}</div>
     </main>}
     {tab==='portaria' && <main className="live-panel gate-panel"><h2>Fiscal de entrada — validação online</h2><p>Somente fiscais autorizados pelo organizador podem registrar uma entrada. Acesso não é válido para eventos reais.</p>
       <label>Evento da portaria <select value={scanEvent} onChange={e=>setScanEvent(e.target.value)}><option value="">Selecione</option>{managed.map(e=><option key={e.id} value={e.id}>{e.title}</option>)}</select></label>
@@ -354,6 +362,7 @@ export default function LiveApp() {
     {tab==='conta'&&user&&<main className="live-panel live-help"><h2>Sua conta de teste</h2>
       <p><strong>E-mail:</strong> {user.email||'Não informado'}</p><p><strong>UID:</strong> <code className="live-code">{user.uid}</code></p>
       <p><strong>Verificação do e-mail:</strong> {user.emailVerified?'Verificado':'Ainda não verificado'}</p>
+      {!user.emailVerified&&user.email&&<button className="live-secondary" disabled={busy} type="button" onClick={verifyEmail}>Enviar e-mail de verificação</button>}
       <p>Este painel mostra apenas a identidade autenticada pelo Firebase. Ele não concede permissões de organização, fiscalização ou administração.</p>
       <button type="button" className="live-secondary" onClick={()=>firebaseAuth&&signOut(firebaseAuth)}>Encerrar sessão</button>
     </main>}
