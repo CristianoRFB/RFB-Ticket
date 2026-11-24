@@ -263,13 +263,23 @@ export async function handleApi(request,env) {
       }
       if(operation==='audit' && method==='GET') {
         await requireRole(env.DB,user.uid,eventId);
-        const result=await env.DB.prepare('SELECT id,action,target_id,created_at FROM audit WHERE event_id=? ORDER BY created_at DESC LIMIT 100').bind(eventId).all();
-        return ok({audit:result.results||[]});
+        const pageText=url.searchParams.get('page')||'1';
+        if(!/^[1-9][0-9]{0,3}$/.test(pageText))bad('INVALID_PAGE',400);
+        const page=Number(pageText),size=50;
+        const result=await env.DB.prepare('SELECT id,action,target_id,created_at FROM audit WHERE event_id=? ORDER BY created_at DESC,id DESC LIMIT ? OFFSET ?').bind(eventId,size+1,(page-1)*size).all();
+        const rows=result.results||[];
+        return ok({audit:rows.slice(0,size),page,hasMore:rows.length>size});
       }
       if(operation==='checkins' && method==='GET') {
         await requireRole(env.DB,user.uid,eventId,['organizer','gate']);
-        const result=await env.DB.prepare('SELECT ticket_id,created_at FROM checkins WHERE event_id=? ORDER BY created_at DESC LIMIT 100').bind(eventId).all();
-        return ok({checkins:result.results||[]});
+        const pageText=url.searchParams.get('page')||'1';
+        if(!/^[1-9][0-9]{0,3}$/.test(pageText))bad('INVALID_PAGE',400);
+        const page=Number(pageText),size=50;
+        const result=await env.DB.prepare(`SELECT t.ticket_number,c.created_at
+          FROM checkins c JOIN tickets t ON t.id=c.ticket_id
+          WHERE c.event_id=? ORDER BY c.created_at DESC,t.ticket_number DESC LIMIT ? OFFSET ?`).bind(eventId,size+1,(page-1)*size).all();
+        const rows=result.results||[];
+        return ok({checkins:rows.slice(0,size),page,hasMore:rows.length>size});
       }
     }
     // Order holds are D1 transactions. Client supplies neither event price nor tenant identity.
@@ -391,6 +401,11 @@ export async function handleApi(request,env) {
       const result=await env.DB.batch([
         env.DB.prepare(sql).bind(user.uid,requestId,t,ticket.id,eventId,ticket.token_version,user.uid,user.uid),
         env.DB.prepare("UPDATE tickets SET status='used',used_at=? WHERE id=? AND status='issued' AND EXISTS(SELECT 1 FROM checkins WHERE ticket_id=? AND request_id=?)").bind(t,ticket.id,ticket.id,requestId),
+        // Audit and admission commit together; do not return a 500 after the gate opened.
+        env.DB.prepare(`INSERT INTO audit(event_id,actor_uid,action,target_id,created_at)
+          SELECT ?,?,'CHECKIN_ACCEPTED',?,? WHERE EXISTS
+          (SELECT 1 FROM checkins WHERE ticket_id=? AND request_id=? AND fiscal_uid=?)`)
+          .bind(eventId,user.uid,ticket.id,t,ticket.id,requestId,user.uid),
       ]);
       if(!result[0]?.meta?.changes)bad('ALREADY_USED_OR_REVOKED',409);
       return ok({result:'OK',replayed:false,usedAt:t,sandbox:true});
