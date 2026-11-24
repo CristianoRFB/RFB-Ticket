@@ -29,3 +29,8 @@
 .live-gate-history li{line-height:1.5;padding:8px 0;border-bottom:1px solid #392c49}
 .live-gate-history time{display:block;color:#c7b9d1;font-size:.85rem}
 .live-gate-history li::marker{color:#d4a0fc}
+
+.live-activity-list{display:grid;gap:10px;list-style:none;padding:0}
+.live-activity-list li{display:grid;gap:5px;border:1px solid #4b365a;background:#211729;border-radius:12px;padding:14px}
+.live-activity-list span,.live-activity-list time{font-size:.85rem;color:#d1c2dd}
+.live-activity-list strong{color:#fff}
