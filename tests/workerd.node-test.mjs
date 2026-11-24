@@ -108,6 +108,12 @@ test('workerd D1: two concurrent buyers cannot oversell and the signed QR is sin
   assert.deepEqual([admitA.status,admitB.status].sort(),[200,409]);
   const count=await db.prepare('SELECT COUNT(*) AS n FROM checkins WHERE event_id=?').bind(eventId).first();
   assert.equal(count.n,1);
+  const auditRow=await db.prepare("SELECT COUNT(*) AS n FROM audit WHERE event_id=? AND action='CHECKIN_ACCEPTED' AND target_id=?").bind(eventId,issue.tickets[0].id).first();
+  assert.equal(auditRow.n,1);
+  const activity=await request('/api/events/'+eventId+'/checkins?page=1','GET',undefined,gate);
+  assert.equal(activity.status,200);assert.equal(activity.checkins.length,1);
+  assert.equal(activity.checkins[0].ticket_number,issue.tickets[0].ticket_number);
+  assert.ok(!('fiscal_uid' in activity.checkins[0]));
   const approved=admitA.status===200?{uid:gate,id:firstId}:{uid:organizer,id:secondId};
   const replay=await request('/api/checkin','POST',{eventId,token,requestId:approved.id},approved.uid);
   assert.equal(replay.status,200);assert.equal(replay.replayed,true);
@@ -267,4 +273,21 @@ test('workerd D1: admin read-only report requires server-bound UID',async()=>{
   assert.ok(Number.isInteger(data.stats.total_events));
   assert.ok(Number.isInteger(data.stats.completed_checkins));
   assert.equal((await request('/api/admin/summary','POST',{},admin)).status,404);
+});
+
+
+test('workerd D1: search exact strings, pagination and input guards',async()=>{
+  const term='cfSearch'+randomUUID().replaceAll('-','').slice(0,12);
+  const statements=Array.from({length:22},(_,i)=>
+    db.prepare("INSERT INTO events(id,organizer_uid,title,description,city,starts_at,status) VALUES(?,?,?,?,?,?,'published')")
+      .bind(randomUUID(),'organizer-workerd',term+' Festival '+i,'Evento local para paginação','Jales',`2028-05-${String(i+1).padStart(2,'0')}T15:00:00Z`)
+  );
+  await db.batch(statements);
+  const p1=await request('/api/events?q='+term+'&city=jales');
+  const p2=await request('/api/events?q='+term+'&city=jales&page=2');
+  assert.equal(p1.status,200);assert.equal(p1.events.length,20);assert.equal(p1.hasMore,true);
+  assert.equal(p2.status,200);assert.equal(p2.events.length,2);assert.equal(p2.hasMore,false);
+  assert.equal((await request('/api/events?q=%25')).events.length,0);
+  assert.equal((await request('/api/events?page=-1')).status,400);
+  assert.equal((await request('/api/events?q='+('x'.repeat(101)))).status,400);
 });
