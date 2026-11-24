@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import type { User } from 'firebase/auth';
-import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, signOut } from 'firebase/auth';
 import { firebaseAuth } from './firebase';
 import { api, displayDate, money, type TicketEvent, type Lot, type Order, type Ticket, type EventDetail, type EventStats } from './api';
 import QR from './QR';
 
-type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador'|'admin';
+type Tab='explorar'|'pedidos'|'ingressos'|'portaria'|'organizador'|'admin'|'ajuda'|'conta';
 type Report = {stats:EventStats;financials:string};
 function errorText(e: unknown) {return e instanceof Error ? e.message : 'Erro inesperado';}
 function AuthPanel({onDone}:{onDone:()=>void}) {
@@ -14,6 +14,15 @@ function AuthPanel({onDone}:{onDone:()=>void}) {
     if(creating)await createUserWithEmailAndPassword(firebaseAuth,email,password);else await signInWithEmailAndPassword(firebaseAuth,email,password);
     onDone();
   }catch(err){setMessage(errorText(err));}finally{setBusy(false);}}
+  async function resetPassword(){
+    if(!firebaseAuth||!email.trim()) {setMessage('Informe seu e-mail antes de solicitar recuperação.');return;}
+    setBusy(true);setMessage('');
+    try{
+      await sendPasswordResetEmail(firebaseAuth,email.trim());
+      setMessage('Se o endereço estiver cadastrado, você receberá orientações de recuperação.');
+    }catch{setMessage('Não foi possível solicitar a recuperação. Verifique sua conexão e tente novamente.');}
+    finally{setBusy(false);}
+  }
   return <form className="auth-form" onSubmit={submit}>
     <h2>{creating?'Criar conta de teste':'Entrar no sandbox'}</h2>
     <p>Identidade via Firebase Authentication. Nenhum pagamento real será processado.</p>
@@ -21,7 +30,8 @@ function AuthPanel({onDone}:{onDone:()=>void}) {
     <label>Senha <input type="password" minLength={6} value={password} onChange={e=>setPassword(e.target.value)} required autoComplete={creating?'new-password':'current-password'}/></label>
     {message && <p className="live-feedback" role="alert">{message}</p>}
     <button type="submit" disabled={busy}>{busy?'Processando...':creating?'Criar conta':'Entrar'}</button>
-    <button type="button" className="live-link" onClick={()=>setCreating(!creating)}>{creating?'Já tenho conta':'Cadastrar conta de teste'}</button>
+    <button type="button" className="live-link" disabled={busy} onClick={()=>setCreating(!creating)}>{creating?'Já tenho conta':'Cadastrar conta de teste'}</button>
+    {!creating&&<button type="button" className="live-link" disabled={busy||!email.trim()} onClick={resetPassword}>Recuperar acesso por e-mail</button>}
   </form>;
 }
 function GateScanner({onScan}:{onScan:(token:string)=>Promise<boolean>}) {
@@ -59,6 +69,8 @@ function GateScanner({onScan}:{onScan:(token:string)=>Promise<boolean>}) {
 export default function LiveApp() {
   const [user,setUser]=useState<User|null>(firebaseAuth?.currentUser??null);
   const [tab,setTab]=useState<Tab>('explorar'),[events,setEvents]=useState<TicketEvent[]>([]),[detail,setDetail]=useState<EventDetail|null>(null);
+  const [searchText,setSearchText]=useState(''),[searchCity,setSearchCity]=useState(''),[catalogPage,setCatalogPage]=useState(1),[catalogHasMore,setCatalogHasMore]=useState(false),[catalogBusy,setCatalogBusy]=useState(false),[catalogError,setCatalogError]=useState('');
+  const catalogFilters=useRef({q:'',city:'',page:1});
   const [managed,setManaged]=useState<TicketEvent[]>([]),[manageId,setManageId]=useState(''),[manageDetail,setManageDetail]=useState<EventDetail|null>(null);
   const [orders,setOrders]=useState<Order[]>([]),[tickets,setTickets]=useState<Ticket[]>([]),[report,setReport]=useState<Report|null>(null);
   const [quantity,setQuantity]=useState(1),[lotId,setLotId]=useState(''),[token,setToken]=useState(''),[scanEvent,setScanEvent]=useState('');
@@ -68,9 +80,18 @@ export default function LiveApp() {
   const [editTitle,setEditTitle]=useState(''),[editCity,setEditCity]=useState(''),[editDescription,setEditDescription]=useState(''),[editDate,setEditDate]=useState('');
   const userRef=useRef<User|null>(user);userRef.current=user;
   useEffect(()=>firebaseAuth ? onAuthStateChanged(firebaseAuth,u=>{setUser(u);setMessage('');}) : undefined,[]);
+  async function loadCatalog(q=catalogFilters.current.q,city=catalogFilters.current.city,page=catalogFilters.current.page) {
+    setCatalogBusy(true);setCatalogError('');
+    try {
+      const params=new URLSearchParams({page:String(page)});
+      if(q)params.set('q',q);if(city)params.set('city',city);
+      const publicData=await api<{events:TicketEvent[];hasMore:boolean;page:number}>('/api/events?'+params.toString(),null);
+      catalogFilters.current={q,city,page};setCatalogPage(page);setEvents(publicData.events);setCatalogHasMore(publicData.hasMore);
+    } catch(e){setCatalogError('Não foi possível carregar o catálogo: '+errorText(e));}
+    finally{setCatalogBusy(false);}
+  }
   async function refresh(activeUser:User|null=userRef.current){
-    const publicData=await api<{events:TicketEvent[]}>('/api/events',null);
-    setEvents(publicData.events);
+    await loadCatalog();
     if(activeUser){const [mine,ts,orgs,identity]=await Promise.all([
       api<{orders:Order[]}>('/api/orders',activeUser),api<{tickets:Ticket[]}>('/api/tickets',activeUser),api<{events:TicketEvent[]}>('/api/manage/events',activeUser),api<{isAdmin:boolean}>('/api/me',activeUser)]);
       setOrders(mine.orders);setTickets(ts.tickets);setManaged(orgs.events);setIsAdmin(identity.isAdmin===true);
@@ -79,6 +100,17 @@ export default function LiveApp() {
   useEffect(()=>{refresh(user).catch(e=>setMessage(errorText(e)));},[user]);
   async function run(action:()=>Promise<void>) {setBusy(true);setMessage('');try{await action();}catch(e){setMessage(errorText(e));}finally{setBusy(false);}}
   async function openEvent(id:string) {await run(async()=>{setLotId('');const data=await api<EventDetail>('/api/events/'+id,null);setDetail(data);});}
+  async function searchCatalog(e:FormEvent) {
+    e.preventDefault();setDetail(null);setLotId('');
+    await loadCatalog(searchText.trim(),searchCity.trim(),1);
+  }
+  async function clearCatalog() {
+    setSearchText('');setSearchCity('');setDetail(null);setLotId('');
+    await loadCatalog('','',1);
+  }
+  async function catalogGo(page:number) {
+    setDetail(null);setLotId('');await loadCatalog(catalogFilters.current.q,catalogFilters.current.city,page);
+  }
   async function buy() {if(!user||!lotId)return;await run(async()=>{
     const result=await api<{order:Order}>('/api/orders',user,'POST',{lotId,quantity,requestKey:crypto.randomUUID()});
     setMessage('Reserva sandbox criada. Você pode emitir ingressos simulados na aba Pedidos. Nenhum dinheiro foi cobrado.');
@@ -153,8 +185,9 @@ export default function LiveApp() {
   });}
   const [cancelArmed,setCancelArmed]=useState(false);
   const isEventOwner=!!user && !!manageDetail && manageDetail.event.organizer_uid===user.uid;
-  const nav:[Tab,string][]=[['explorar','Eventos'],['pedidos','Pedidos'],['ingressos','Meus ingressos'],['portaria','Portaria'],['organizador','Organizador']];
+  const nav:[Tab,string][]=[['explorar','Eventos'],['pedidos','Pedidos'],['ingressos','Meus ingressos'],['portaria','Portaria'],['organizador','Organizador'],['ajuda','Ajuda']];
   if(isAdmin)nav.push(['admin','Administração']);
+  if(user)nav.push(['conta','Conta']);
   return <div className="live-shell">
     <header className="live-header"><div><p className="live-kicker">RFB LABS / ACESSO A EVENTOS</p><h1>RFBTicket <span>Sandbox</span></h1><p>Bilheteria de demonstração com validação online. Sem pagamentos reais.</p></div>
       <div className="live-identity">{user?<><span title="UID do Firebase">UID: {user.uid}</span><button type="button" className="live-secondary" onClick={()=>firebaseAuth&&signOut(firebaseAuth)}>Sair</button></>:<span>Visitante — autentique para operar</span>}</div>
@@ -163,8 +196,21 @@ export default function LiveApp() {
     <nav className="live-tabs" aria-label="Módulos" role="navigation">{nav.map(([value,label])=><button key={value} type="button" aria-current={tab===value?'page':undefined} onClick={()=>{setTab(value);setMessage('');}}>{label}</button>)}</nav>
     {message && <div role="status" aria-live="polite" className={'live-feedback '+(message.includes('APROVADA')?'approved':'')}>{message}</div>}
     {tab==='explorar' && <main className="live-columns">
-      <section className="live-panel"><h2>Eventos disponíveis</h2>{!events.length && <p>Nenhum evento publicado no banco sandbox.</p>}
+      <section className="live-panel"><h2>Descobrir eventos</h2>
+        <form className="live-search" onSubmit={searchCatalog} role="search" aria-label="Buscar eventos">
+          <label>Nome ou descrição <input type="search" maxLength={100} placeholder="Ex.: festival, feira, workshop" value={searchText} onChange={e=>setSearchText(e.target.value)}/></label>
+          <label>Cidade <input type="search" maxLength={100} placeholder="Ex.: Jales" value={searchCity} onChange={e=>setSearchCity(e.target.value)}/></label>
+          <div className="live-actions"><button type="submit" disabled={catalogBusy}>Buscar</button><button type="button" className="live-secondary" disabled={catalogBusy} onClick={clearCatalog}>Limpar filtros</button></div>
+        </form>
+        {catalogBusy&&<p aria-live="polite" role="status">Carregando eventos…</p>}
+        {catalogError&&<div role="alert" className="live-feedback">{catalogError}<button type="button" className="live-secondary" onClick={()=>loadCatalog()}>Tentar novamente</button></div>}
+        {!catalogBusy&&!catalogError&&!events.length&&<p>Nenhum evento encontrado. Altere os filtros ou volte mais tarde.</p>}
         {events.map(ev=><button type="button" className="live-option" key={ev.id} onClick={()=>openEvent(ev.id)}><strong>{ev.title}</strong><span>{ev.city} · {displayDate(ev.starts_at)}</span></button>)}
+        {!catalogError&&<div className="live-pagination" aria-label="Paginação do catálogo">
+          <button type="button" className="live-secondary" onClick={()=>catalogGo(catalogPage-1)} disabled={catalogBusy||catalogPage===1}>Anterior</button>
+          <span aria-live="polite">Página {catalogPage}</span>
+          <button type="button" className="live-secondary" onClick={()=>catalogGo(catalogPage+1)} disabled={catalogBusy||!catalogHasMore}>Próxima</button>
+        </div>}
       </section>
       <section className="live-panel"><h2>{detail?detail.event.title:'Escolha um evento'}</h2>{detail?<><p>{detail.event.description}</p><p>{detail.event.city} · {displayDate(detail.event.starts_at)}</p>
         <h3>Lotes</h3>{detail.lots.map(l=><button type="button" className="live-option" key={l.id} aria-pressed={lotId===l.id} disabled={l.status!=='available'||l.available<=0} onClick={()=>setLotId(l.id)}><strong>{l.label} — {money(l.price_cents)}</strong><span>{l.available} vagas · {l.status}</span></button>)}
@@ -224,6 +270,21 @@ export default function LiveApp() {
       <div><strong>{adminReport.sandbox_orders}</strong><span>Pedidos fictícios</span></div>
       <div><strong>{adminReport.issued_tickets}</strong><span>Ingressos emitidos</span></div>
       <div><strong>{adminReport.completed_checkins}</strong><span>Entradas demonstrativas</span></div></div>}
+    </main>}
+    {tab==='ajuda'&&<main className="live-panel live-help"><h2>Ajuda e funcionamento do sandbox</h2>
+      <p>Este ambiente demonstra emissão e controle de acesso para eventos fictícios; não compre nem apresente essas credenciais em eventos reais.</p>
+      <details><summary>Como reservar e receber um ingresso?</summary><p>Escolha um evento e lote disponível, entre com uma conta de teste e reserve entre 1 e 4 vagas. Na aba Pedidos, a confirmação é inteiramente fictícia. O QR aparece em Meus ingressos.</p></details>
+      <details><summary>Quanto tempo dura uma reserva?</summary><p>Dez minutos. Depois do prazo a vaga volta a ficar disponível, e a reserva vencida não pode ser confirmada.</p></details>
+      <details><summary>Como funciona a entrada e a câmera?</summary><p>O organizador autoriza a conta do fiscal para aquele evento. A leitura exige conexão; se a câmera falhar, use o campo manual. O primeiro check-in válido é aceito, as tentativas independentes seguintes são recusadas.</p></details>
+      <details><summary>Como funcionam transferências e reembolsos?</summary><p>Cada ingresso pode ser transferido uma vez, invalidando o QR antigo. O reembolso é somente uma simulação e nunca transfere dinheiro.</p></details>
+      <details><summary>Privacidade e retenção de dados</summary><p>Os testes devem utilizar contas e eventos fictícios. O sistema não está homologado para cadastro de clientes reais. A política definitiva de retenção e exclusão depende da integração de homologação.</p></details>
+      <details><summary>O sistema funciona sem internet?</summary><p>Não. Sem conexão ou confirmação do servidor, a portaria nunca deve assumir que a entrada foi aprovada.</p></details>
+    </main>}
+    {tab==='conta'&&user&&<main className="live-panel live-help"><h2>Sua conta de teste</h2>
+      <p><strong>E-mail:</strong> {user.email||'Não informado'}</p><p><strong>UID:</strong> <code className="live-code">{user.uid}</code></p>
+      <p><strong>Verificação do e-mail:</strong> {user.emailVerified?'Verificado':'Ainda não verificado'}</p>
+      <p>Este painel mostra apenas a identidade autenticada pelo Firebase. Ele não concede permissões de organização, fiscalização ou administração.</p>
+      <button type="button" className="live-secondary" onClick={()=>firebaseAuth&&signOut(firebaseAuth)}>Encerrar sessão</button>
     </main>}
     <footer className="live-footer">RFB Method — sandbox sem valor financeiro, sem cobrança, sem ingresso para eventos reais.</footer>
   </div>;
