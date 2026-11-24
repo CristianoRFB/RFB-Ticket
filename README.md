@@ -1,5 +1,16 @@
 # RFBTicket — da venda ao check-in sem filas
 
+<!-- RFB-PORTFOLIO-README-V1 -->
+<div align="center">
+  <img src="public/brand/logo.svg" alt="Logo conceitual do RFBTicket" width="440"/>
+  
+  **Da venda ao check-in sem filas**
+  
+  <sub>Sandbox técnico em PR draft, não homologado</sub>
+</div>
+
+> **Portfólio RFB Labs.** Este projeto valoriza arquitetura, fluxos e evidência técnica real. O logo ainda é um conceito e os recursos a seguir têm o estágio detalhado na documentação. Não confundir sandbox/emulador com produção.
+
 **Status: PR DRAFT / sandbox técnico local. Não é bilheteria em produção.**
 
 Sistema de ingressos experimentais para eventos, com React/Vite, identidade Firebase, Cloudflare Worker e D1 transacional. Possui demonstração local sem backend e um modo sandbox autenticado que depende de infraestrutura de teste ainda NÃO provisionada. Nenhuma venda ou reembolso real.
@@ -61,3 +72,24 @@ A branch Draft agora possui controle de expiração de reservas, limite atômico
 ### S009 — escopo efetivamente testado
 
 [Workerd+D1: 10 testes PASS (run 45179829134)](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45179829134), incluindo transferência uma vez, QR antigo revogado e administração somente-leitura por UID do servidor. [Diagramas conforme código](docs/AS-BUILT-DIAGRAMS.md) e [cobertura T001–T058](docs/UX-DESIGN-AND-QA.md) atualizados. Ainda sem Firebase remoto, gateway financeiro real, produção e câmera homologada.
+
+## Galeria visual do produto
+
+Capturas reais serão adicionadas após QA desktop/mobile em staging local com dados sintéticos. Os quatro quadros abaixo estão **pendentes**, não são imagens do aplicativo publicado.
+
+| Experiência a documentar | Captura |
+|---|---|
+| 1. Catálogo de eventos | Pendente de captura verificável |
+| 2. Evento e lotes | Pendente de captura verificável |
+| 3. Ingresso QR sandbox | Pendente de captura verificável |
+| 4. Validação da portaria | Pendente de captura verificável |
+
+[Manifesto de capturas e evidências](docs/screenshots/manifest.json). Nenhuma imagem artificial deve ser apresentada como screenshot funcional.
+
+---
+
+<div align="center">
+  <img src="public/brand/assinatura-rfb.svg" width="70" alt="Assinatura institucional RFB"/>
+  
+  <sub>Desenvolvido por RFB · assinatura do criador, independente da marca do aplicativo.</sub>
+</div>
