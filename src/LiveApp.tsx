@@ -82,6 +82,8 @@ export default function LiveApp() {
   const [gateActivity,setGateActivity]=useState<Array<{ticket_number:number;created_at:number}>>([]);
   const [gatePage,setGatePage]=useState(1),[gateHasMore,setGateHasMore]=useState(false),[gateBusy,setGateBusy]=useState(false),[gateError,setGateError]=useState('');
   const [isAdmin,setIsAdmin]=useState(false),[adminReport,setAdminReport]=useState<{total_events:number;published_events:number;total_lots:number;sandbox_orders:number;issued_tickets:number;completed_checkins:number}|null>(null);
+  const [adminEvents,setAdminEvents]=useState<TicketEvent[]>([]),[adminAudit,setAdminAudit]=useState<Array<{event_id:string;action:string;created_at:number}>>([]);
+  const [adminEventPage,setAdminEventPage]=useState(1),[adminEventMore,setAdminEventMore]=useState(false),[adminAuditPage,setAdminAuditPage]=useState(1),[adminAuditMore,setAdminAuditMore]=useState(false);
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[newEventTitle,setNewEventTitle]=useState(''),[newEventCity,setNewEventCity]=useState(''),[newEventDate,setNewEventDate]=useState('');
   const [newLotLabel,setNewLotLabel]=useState(''),[newLotCapacity,setNewLotCapacity]=useState(40),[newLotPrice,setNewLotPrice]=useState(2500),[staffUid,setStaffUid]=useState(''),[transferTarget,setTransferTarget]=useState<Record<string,string>>({});
   const [editTitle,setEditTitle]=useState(''),[editCity,setEditCity]=useState(''),[editDescription,setEditDescription]=useState(''),[editDate,setEditDate]=useState('');
@@ -102,7 +104,7 @@ export default function LiveApp() {
     if(activeUser){const [mine,ts,orgs,identity]=await Promise.all([
       api<{orders:Order[]}>('/api/orders',activeUser),api<{tickets:Ticket[]}>('/api/tickets',activeUser),api<{events:TicketEvent[]}>('/api/manage/events',activeUser),api<{isAdmin:boolean}>('/api/me',activeUser)]);
       setOrders(mine.orders);setTickets(ts.tickets);setManaged(orgs.events);setIsAdmin(identity.isAdmin===true);
-    } else {setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);}
+    } else {setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);setAdminEvents([]);setAdminAudit([]);}
   }
   useEffect(()=>{refresh(user).catch(e=>setMessage(errorText(e)));},[user]);
   async function run(action:()=>Promise<void>) {setBusy(true);setMessage('');try{await action();}catch(e){setMessage(errorText(e));}finally{setBusy(false);}}
@@ -221,6 +223,18 @@ export default function LiveApp() {
     await api('/api/events/'+manageId+'/staff/'+encodeURIComponent(uid),user,'DELETE');
     await reloadManaged(manageId);setMessage('Acesso de fiscal revogado imediatamente.');
   });}
+  async function loadAdminViews(eventsPage=adminEventPage,auditPage=adminAuditPage){
+    if(!user||!isAdmin)return;
+    await run(async()=>{
+      const [summary,eventRows,auditRows]=await Promise.all([
+        api<{stats:NonNullable<typeof adminReport>}>('/api/admin/summary',user),
+        api<{events:TicketEvent[];page:number;hasMore:boolean}>('/api/admin/events?page='+eventsPage,user),
+        api<{audit:Array<{event_id:string;action:string;created_at:number}>;page:number;hasMore:boolean}>('/api/admin/audit?page='+auditPage,user)
+      ]);
+      setAdminReport(summary.stats);setAdminEvents(eventRows.events);setAdminEventPage(eventRows.page);setAdminEventMore(eventRows.hasMore);
+      setAdminAudit(auditRows.audit);setAdminAuditPage(auditRows.page);setAdminAuditMore(auditRows.hasMore);
+    });
+  }
   const [cancelArmed,setCancelArmed]=useState(false);
   const isEventOwner=!!user && !!manageDetail && manageDetail.event.organizer_uid===user.uid;
   const selectedLot=detail?.lots.find(l=>l.id===lotId);
@@ -312,13 +326,21 @@ export default function LiveApp() {
     </section></main>}
     {tab==='admin' && isAdmin && <main className="live-panel"><h2>Administração — leitura restrita</h2>
       <p>Relatório agregado de todos os eventos sandbox. A concessão de administrador é configurada no backend, nunca na interface.</p>
-      <button type="button" disabled={busy||!user} onClick={()=>run(async()=>{if(!user)return;const x=await api<{stats:NonNullable<typeof adminReport>}>('/api/admin/summary',user);setAdminReport(x.stats);})}>Atualizar visão administrativa</button>
+      <button type="button" disabled={busy||!user} onClick={()=>loadAdminViews(1,1)}>Atualizar visão administrativa</button>
       {adminReport&&<div className="live-metrics"><div><strong>{adminReport.total_events}</strong><span>Eventos no sandbox</span></div>
       <div><strong>{adminReport.published_events}</strong><span>Eventos publicados</span></div>
       <div><strong>{adminReport.total_lots}</strong><span>Lotes cadastrados</span></div>
       <div><strong>{adminReport.sandbox_orders}</strong><span>Pedidos fictícios</span></div>
       <div><strong>{adminReport.issued_tickets}</strong><span>Ingressos emitidos</span></div>
       <div><strong>{adminReport.completed_checkins}</strong><span>Entradas demonstrativas</span></div></div>}
+      {adminReport&&<><h3>Eventos sob monitoramento — somente leitura</h3>
+        {adminEvents.length===0&&<p>Nenhum evento neste intervalo.</p>}
+        <div className="live-admin-events">{adminEvents.map(e=><div key={e.id} className="live-listitem"><div><strong>{e.title}</strong><span>{e.city} · {displayDate(e.starts_at)}</span></div><span>{e.status}</span></div>)}</div>
+        <div className="live-pagination"><button type="button" className="live-secondary" disabled={busy||adminEventPage<=1} onClick={()=>loadAdminViews(adminEventPage-1,adminAuditPage)}>Anterior</button><span>Página {adminEventPage}</span><button type="button" className="live-secondary" disabled={busy||!adminEventMore} onClick={()=>loadAdminViews(adminEventPage+1,adminAuditPage)}>Próxima</button></div>
+        <h3>Auditoria sanitizada</h3><p>Por privacidade, este relatório não exibe UIDs, e-mails, QR codes nem identificadores de destino.</p>
+        <div className="live-admin-audit">{adminAudit.map((row,index)=><div className="live-listitem" key={row.event_id+row.action+row.created_at+index}><div><strong>{row.action}</strong><span>Evento {row.event_id.slice(0,8)}</span></div><time dateTime={new Date(row.created_at*1000).toISOString()}>{new Date(row.created_at*1000).toLocaleString('pt-BR')}</time></div>)}</div>
+        <div className="live-pagination"><button type="button" className="live-secondary" disabled={busy||adminAuditPage<=1} onClick={()=>loadAdminViews(adminEventPage,adminAuditPage-1)}>Anterior</button><span>Página {adminAuditPage}</span><button type="button" className="live-secondary" disabled={busy||!adminAuditMore} onClick={()=>loadAdminViews(adminEventPage,adminAuditPage+1)}>Próxima</button></div>
+      </>}
     </main>}
     {tab==='ajuda'&&<main className="live-panel live-help"><h2>Ajuda e funcionamento do sandbox</h2>
       <p>Este ambiente demonstra emissão e controle de acesso para eventos fictícios; não compre nem apresente essas credenciais em eventos reais.</p>
