@@ -272,6 +272,14 @@ test('workerd D1: admin read-only report requires server-bound UID',async()=>{
   assert.equal(data.status,200);
   assert.ok(Number.isInteger(data.stats.total_events));
   assert.ok(Number.isInteger(data.stats.completed_checkins));
+  const events=await request('/api/admin/events?page=1','GET',undefined,admin);
+  assert.equal(events.status,200);assert.ok(events.events.length>0);
+  assert.ok(events.events.every(e=>!('organizer_uid' in e)));
+  const audit=await request('/api/admin/audit?page=1','GET',undefined,admin);
+  assert.equal(audit.status,200);assert.ok(audit.audit.length>0);
+  assert.ok(audit.audit.every(x=>!('actor_uid' in x)&&!('target_id' in x)));
+  assert.equal((await request('/api/admin/audit','GET',undefined,buyerA)).status,403);
+  assert.equal((await request('/api/admin/events?status=bad','GET',undefined,admin)).status,400);
   assert.equal((await request('/api/admin/summary','POST',{},admin)).status,404);
 });
 
