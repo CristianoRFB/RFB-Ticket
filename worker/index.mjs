@@ -124,6 +124,27 @@ export async function handleApi(request,env) {
       return ok({stats,financials:'sandbox_only',readOnly:true});
     }
 
+    // Admin-only operational read models. No UID, phone, e-mail, QR or target
+    // identifier is returned, including in audit history.
+    if(method==='GET' && (path==='/api/admin/events'||path==='/api/admin/audit')){
+      if(!env.ADMIN_UID||user.uid!==env.ADMIN_UID)bad('NO_PERMISSION',403);
+      const pageText=url.searchParams.get('page')||'1';
+      if(!/^[1-9][0-9]{0,3}$/.test(pageText))bad('INVALID_PAGE',400);
+      const page=Number(pageText),size=50;
+      if(path==='/api/admin/events'){
+        const status=url.searchParams.get('status')||'';
+        if(status && !['draft','published','cancelled'].includes(status))bad('INVALID_INPUT',400);
+        const result=await env.DB.prepare(`SELECT id,title,city,starts_at,status
+          FROM events WHERE (?='' OR status=?) ORDER BY starts_at DESC,id DESC LIMIT ? OFFSET ?`)
+          .bind(status,status,size+1,(page-1)*size).all();
+        const rows=result.results||[];
+        return ok({events:rows.slice(0,size),page,hasMore:rows.length>size,readOnly:true});
+      }
+      const result=await env.DB.prepare(`SELECT event_id,action,created_at FROM audit
+        ORDER BY id DESC LIMIT ? OFFSET ?`).bind(size+1,(page-1)*size).all();
+      const rows=result.results||[];
+      return ok({audit:rows.slice(0,size),page,hasMore:rows.length>size,readOnly:true});
+    }
     // Organizer-only CSV export: ticket numbers and UTC timestamps, never QR
     // secrets, buyer UID or fiscal UID. Explicit cap prevents unbounded reads.
     const csvRoute=/^\/api\/events\/([^/]+)\/checkins\.csv$/.exec(path);
