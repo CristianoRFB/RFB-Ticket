@@ -99,6 +99,7 @@ test('role isolation, single check-in, replay and authorized gate',async()=>{
  assert.equal(second.httpStatus,409);assert.equal(second.error,'ALREADY_USED');
  const st=await api('/api/events/'+eventId+'/stats','GET',null,a);
  assert.equal(st.stats.checkins,1);assert.equal(st.stats.issued,1);
+ assert.equal(db.prepare("SELECT COUNT(*) AS n FROM audit WHERE event_id=? AND action='CHECKIN_ACCEPTED' AND target_id=?").get(eventId,ticket.id).n,1);
  assert.equal((await api('/api/events/'+eventId+'/stats','GET',null,b)).httpStatus,403);
  assert.equal((await api('/api/orders/'+orderId+'/refund','POST',{},b)).error,'REFUND_DENIED');
 });
@@ -337,6 +338,21 @@ test('event discovery: pagination, search, city filter, literal wildcards and in
   for(const value of ['/api/events?page=0','/api/events?page=-1','/api/events?page=01','/api/events?page=10000','/api/events?q='+('x'.repeat(101))]) {
     const response=await api(value);assert.equal(response.httpStatus,400);assert.equal(response.error,'INVALID_SEARCH');
   }
+});
+
+
+test('gate reports paginate and omit private identifiers',async()=>{
+  const report=await api('/api/events/'+eventId+'/checkins?page=1','GET',null,gate);
+  assert.equal(report.httpStatus,200);assert.equal(report.page,1);
+  assert.ok(report.checkins.length>=1);
+  assert.ok(report.checkins.every(row=>Number.isInteger(row.ticket_number)&&!('fiscal_uid' in row)&&!('owner_uid' in row)&&!('ticket_id' in row)));
+  assert.equal((await api('/api/events/'+eventId+'/checkins?page=2','GET',null,gate)).httpStatus,200);
+  assert.equal((await api('/api/events/'+eventId+'/checkins?page=0','GET',null,gate)).error,'INVALID_PAGE');
+  assert.equal((await api('/api/events/'+eventId+'/checkins?page=abc','GET',null,gate)).httpStatus,400);
+  assert.equal((await api('/api/events/'+eventId+'/checkins','GET',null,outsider)).httpStatus,403);
+  assert.equal((await api('/api/events/'+eventId+'/audit?page=0','GET',null,a)).httpStatus,400);
+  assert.equal((await api('/api/events/'+eventId+'/audit?page=2','GET',null,a)).httpStatus,200);
+  assert.equal((await api('/api/events/'+eventId+'/audit','GET',null,gate)).httpStatus,403);
 });
 
 after(()=>{globalThis.fetch=originalFetch;db.close();});
