@@ -90,7 +90,15 @@ export default function LiveApp() {
   const [refundArmed,setRefundArmed]=useState<string|null>(null),[transferArmed,setTransferArmed]=useState<string|null>(null);
   const [editTitle,setEditTitle]=useState(''),[editCity,setEditCity]=useState(''),[editDescription,setEditDescription]=useState(''),[editDate,setEditDate]=useState('');
   const userRef=useRef<User|null>(user);userRef.current=user;
-  useEffect(()=>firebaseAuth ? onAuthStateChanged(firebaseAuth,u=>{setUser(u);setMessage('');}) : undefined,[]);
+  const authGeneration=useRef(0);
+  useEffect(()=>firebaseAuth ? onAuthStateChanged(firebaseAuth,u=>{
+    // Clear prior-account data synchronously, not after an async refresh.
+    authGeneration.current+=1;userRef.current=u;setUser(u);
+    setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);
+    setAdminEvents([]);setAdminAudit([]);setGateActivity([]);
+    setScanEvent('');setToken('');setManageDetail(null);setManageId('');setDetail(null);
+    pendingCheckin.current=null;pendingReservation.current=null;setMessage('');
+  }) : undefined,[]);
   async function loadCatalog(q=catalogFilters.current.q,city=catalogFilters.current.city,page=catalogFilters.current.page) {
     setCatalogBusy(true);setCatalogError('');
     try {
@@ -102,11 +110,16 @@ export default function LiveApp() {
     finally{setCatalogBusy(false);}
   }
   async function refresh(activeUser:User|null=userRef.current){
+    const generation=authGeneration.current;
     await loadCatalog();
     if(activeUser){const [mine,ts,orgs,identity]=await Promise.all([
       api<{orders:Order[]}>('/api/orders',activeUser),api<{tickets:Ticket[]}>('/api/tickets',activeUser),api<{events:TicketEvent[]}>('/api/manage/events',activeUser),api<{isAdmin:boolean}>('/api/me',activeUser)]);
+      // Late responses for a signed-out/different account must never repopulate the UI.
+      if(generation!==authGeneration.current || userRef.current?.uid!==activeUser.uid)return;
       setOrders(mine.orders);setTickets(ts.tickets);setManaged(orgs.events);setIsAdmin(identity.isAdmin===true);
-    } else {setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);setAdminEvents([]);setAdminAudit([]);}
+    } else if(generation===authGeneration.current){
+      setOrders([]);setTickets([]);setManaged([]);setIsAdmin(false);setAdminReport(null);setAdminEvents([]);setAdminAudit([]);
+    }
   }
   useEffect(()=>{refresh(user).catch(e=>setMessage(errorText(e)));},[user]);
   async function run(action:()=>Promise<void>) {setBusy(true);setMessage('');try{await action();}catch(e){setMessage(errorText(e));}finally{setBusy(false);}}
@@ -291,7 +304,7 @@ export default function LiveApp() {
     </main>}
     {tab==='portaria' && <main className="live-panel gate-panel"><h2>Fiscal de entrada — validação online</h2><p>Somente fiscais autorizados pelo organizador podem registrar uma entrada. Acesso não é válido para eventos reais.</p>
       <label>Evento da portaria <select value={scanEvent} onChange={e=>setScanEvent(e.target.value)}><option value="">Selecione</option>{managed.map(e=><option key={e.id} value={e.id}>{e.title}</option>)}</select></label>
-      <GateScanner onScan={checkin}/><form onSubmit={e=>{e.preventDefault();checkin(token);}}><label>Código QR / token manual <textarea rows={3} value={token} onChange={e=>setToken(e.target.value)} placeholder="Cole o código do ingresso sandbox" required/></label><button disabled={!user||!scanEvent||!token||busy} type="submit">Validar entrada</button></form>
+      {user&&scanEvent?<GateScanner onScan={checkin}/>:<p>Entre e selecione um evento autorizado antes de ativar a câmera.</p>}<form onSubmit={e=>{e.preventDefault();checkin(token);}}><label>Código QR / token manual <textarea rows={3} value={token} onChange={e=>setToken(e.target.value)} placeholder="Cole o código do ingresso sandbox" required/></label><button disabled={!user||!scanEvent||!token||busy} type="submit">Validar entrada</button></form>
       <p className="live-hint">Offline: nunca assumir entrada aprovada. Sem permissão: acesso negado no servidor.</p>
       <section className="live-gate-history" aria-label="Histórico de entradas recentes">
         <div className="live-actions"><h3>Últimas entradas</h3><button type="button" className="live-secondary" disabled={!scanEvent||gateBusy} onClick={()=>scanEvent&&loadGateActivity(scanEvent,1)}>Atualizar</button></div>
