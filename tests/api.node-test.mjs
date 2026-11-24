@@ -217,6 +217,17 @@ test('administrator dashboard is read-only and granted only by trusted backend c
  assert.equal(denied.httpStatus,403);
  assert.equal((await api('/api/me','GET',null,admin)).isAdmin,true);
  assert.equal((await api('/api/me','GET',null,b)).isAdmin,false);
+ const listing=await api('/api/admin/events?page=1','GET',null,admin);
+ assert.equal(listing.httpStatus,200);assert.equal(listing.readOnly,true);
+ assert.ok(listing.events.length>0);
+ assert.ok(listing.events.every(row=>!('organizer_uid' in row)));
+ const activity=await api('/api/admin/audit?page=1','GET',null,admin);
+ assert.equal(activity.httpStatus,200);assert.equal(activity.readOnly,true);
+ assert.ok(activity.audit.every(row=>!('actor_uid' in row)&&!('target_id' in row)));
+ assert.equal((await api('/api/admin/events?page=0','GET',null,admin)).httpStatus,400);
+ assert.equal((await api('/api/admin/events?status=other','GET',null,admin)).httpStatus,400);
+ assert.equal((await api('/api/admin/events','GET',null,b)).httpStatus,403);
+ assert.equal((await api('/api/admin/audit','GET',null,b)).httpStatus,403);
  delete env.ADMIN_UID;
  assert.equal((await api('/api/admin/summary','GET',null,admin)).httpStatus,403);
 });
