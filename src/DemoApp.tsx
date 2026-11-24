@@ -40,7 +40,7 @@ export default function App() {
   return <div className="shell" style={{ '--accent': product.accent } as CSSProperties}>
     <a className="skip" href="#conteudo">Pular para o conteúdo</a>
     <header className="topbar">
-      <a className="brand" href="#conteudo" aria-label="RFBTicket, início">RFB<span>Ticket</span></a>
+      <a className="brand" href="#conteudo" aria-label="RFBTicket, início"><img src="/brand/icone.svg" alt="" aria-hidden="true" width="36" height="36"/>RFB<span>Ticket</span></a>
       <span className="status">RFB LABS <span aria-hidden="true">·</span> DEMONSTRAÇÃO LOCAL G2</span>
     </header>
     <main id="conteudo">
