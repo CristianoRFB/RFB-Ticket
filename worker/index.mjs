@@ -59,7 +59,7 @@ export async function handleApi(request,env) {
       const page=Number(pageText),size=20;
       const result=await env.DB.prepare(`SELECT id,title,description,city,starts_at,status
         FROM events WHERE status='published'
-        AND (?='' OR instr(lower(title),lower(?))>0 OR instr(lower(description),lower(?))>0)
+        AND (?='' OR instr(lower(title),lower(?))>0 OR instr(lower(description),lower(?))>0
         OR instr(lower(city),lower(?))>0)
         AND (?='' OR instr(lower(city),lower(?))>0)
         ORDER BY starts_at ASC,id ASC LIMIT ? OFFSET ?`)
