@@ -21,3 +21,11 @@
 .live-help details p{margin-bottom:0}
 .live-code{overflow-wrap:anywhere;word-break:break-word;font-size:.88rem}
 .live-feedback button{margin-left:12px}
+
+.live-gate-history{margin-top:24px;border-top:1px solid #4a385b;padding-top:12px}
+.live-gate-history .live-actions{justify-content:space-between}
+.live-gate-history h3{margin:4px 0}
+.live-gate-history ol{padding-left:20px;list-style:decimal;display:grid;gap:10px}
+.live-gate-history li{line-height:1.5;padding:8px 0;border-bottom:1px solid #392c49}
+.live-gate-history time{display:block;color:#c7b9d1;font-size:.85rem}
+.live-gate-history li::marker{color:#d4a0fc}
