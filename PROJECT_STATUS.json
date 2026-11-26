@@ -102,5 +102,19 @@
     "ticket_icon_svg_integrated_in_demo_and_sandbox": true,
     "logo_approval": "PENDING_CONCEPT_V1",
     "favicon": "NOT_DONE"
+  },
+  "current_evolve": {
+    "id": "S011",
+    "state": "BEFORE_WRITE",
+    "baseline": "2334eecbe2ac625d90465967d54b6b22041d6542",
+    "baseline_ci": 45305517218,
+    "objective": "Limit JSON request bytes while streaming, including fake webhook, without new infrastructure",
+    "acceptance": [
+      "reject oversized byte streams and malformed UTF-8",
+      "preserve valid request behavior",
+      "test boundary and webhook signature"
+    ],
+    "rollback": "Revert S011 patch on draft branch; no schema change.",
+    "external_gates": "unchanged"
   }
 }
