@@ -105,7 +105,7 @@
   },
   "current_evolve": {
     "id": "S011",
-    "state": "IMPLEMENTED_UNVERIFIED",
+    "state": "PARTIALLY_VERIFIED",
     "baseline": "2334eecbe2ac625d90465967d54b6b22041d6542",
     "baseline_ci": 45305517218,
     "objective": "Limit JSON request bytes while streaming, including fake webhook, without new infrastructure",
@@ -118,7 +118,14 @@
     "external_gates": "unchanged",
     "code_sha": "91c6cf1458267ad01faf6e6c00e5fc295fb30daf",
     "tests_added": 3,
-    "ci": [],
+    "ci": {
+      "run_id": 45912688578,
+      "status": "in_progress",
+      "backend": "PASS",
+      "frontend": "IN_PROGRESS",
+      "workerd": "IN_PROGRESS",
+      "browser": "IN_PROGRESS"
+    },
     "limitations": "Remote Firebase, D1, PSP, hardware, rate limiting and visual QA remain open."
   }
 }
