@@ -32,3 +32,7 @@ Head de código c0f85cd7f2d8be13c4216e7e3d90d1bf3e6ded72. A CI 45179829134 passo
 ## Triagem pós-S010 — 23/11/2026
 
 RFB-Ticket `4d6b5a437548f161e80a1ffe230cb26c2cfbb44c`; PR #1 permanece OPEN DRAFT, base `main` intacta. Issues abertas=0, PRs abertos=1, reviews=0, comentários=0. CI do código https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45305151761 com quatro jobs SUCCESS. Checagens são de sandbox/mock; gates Firebase/D1 remotos pendem. Não fechar/mesclar #1 sem revisão/aceite e autorização de release.
+
+
+## S011 — 26/11/2026
+Baseline CI 45305517218: SUCCESS (4/4 jobs). Code SHA `91c6cf1458267ad01faf6e6c00e5fc295fb30daf`; [CI 45912688578](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45912688578): in_progress. PR #1 OPEN DRAFT, base `dbd16775e4b4f47a855fd67a736294421ee1f6b9` unchanged; 0 open Issues, 1 open PR at end-of-slice triage. KEEP OPEN: remote gates and release authorization pending.
