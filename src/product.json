@@ -1,0 +1,41 @@
+{
+  "name": "RFBTicket",
+  "slug": "11-rfbticket",
+  "segment": "Ingressos e acesso a eventos",
+  "slogan": "Da venda ao check-in sem filas",
+  "accent": "#B46DF6",
+  "steps": [
+    "Escolher evento",
+    "Selecionar ingresso",
+    "Reservar lote",
+    "Pagar no sandbox",
+    "Emitir credencial",
+    "Validar check-in uma vez"
+  ],
+  "modules": [
+    "Eventos",
+    "Lotes e capacidade",
+    "Checkout",
+    "Emissão de ingressos",
+    "Meus ingressos",
+    "Leitor de QR",
+    "Check-in",
+    "Reembolso",
+    "Painel do organizador",
+    "Relatórios"
+  ],
+  "features": [
+    "Catálogo de eventos",
+    "Lotes com limites",
+    "Ingressos numerados",
+    "Compra com sandbox",
+    "Emissão depois de webhook",
+    "QR assinado/referenciado",
+    "Validação online de uso único",
+    "Leitor com permissão",
+    "Relatório por entrada",
+    "Cancelamento e reembolso",
+    "Transferência com controle",
+    "Log de acessos"
+  ]
+}

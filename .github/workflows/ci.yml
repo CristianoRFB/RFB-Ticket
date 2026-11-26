@@ -1,0 +1,82 @@
+name: RFBTicket verification
+on:
+  pull_request:
+  push:
+    branches:
+      - feature/rfb-starter-pack-v1
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Node API sandbox tests (no external services)
+        run: node --experimental-sqlite --test tests/api.node-test.mjs
+      - name: Domain model
+        run: node --experimental-strip-types --test tests/ticketDomain.node-test.mjs
+  frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies from registry
+        run: npm install --no-audit --no-fund
+      - name: Static type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: Cloudflare build validation (no credentials, no deploy)
+        run: npx cf deploy --dry-run
+      - name: Local D1 migration smoke test (never accesses remote databases)
+        run: |
+          # cf v1 takes a database UUID even in --local mode; this ID is synthetic.
+          LOCAL_DB_ID="00000000-0000-4000-8000-000000000001"
+          npx cf d1 migrations apply "$LOCAL_DB_ID" --local --dir ./migrations
+          npx cf d1 raw "$LOCAL_DB_ID" --local --sql "SELECT COUNT(*) AS n FROM sqlite_master WHERE name='tickets'"
+  edge-d1-integration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Workerd + local D1 integration (no cloud account)
+        run: npm run test:workerd
+  browser-demo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install browser (sandbox demo only)
+        run: npx playwright install --with-deps chromium
+      - name: Real browser QA (synthetic demo only)
+        run: npm run test:e2e
+      - name: Public sandbox UI QA (fake Firebase config + mocked API, no real users)
+        run: npm run test:e2e:sandbox
+      - name: Retain failure artifacts (synthetic fixtures)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-browser-failures
+          path: test-results/
+          retention-days: 3

@@ -1,0 +1,131 @@
+{
+  "schema_version": 4,
+  "project": "RFBTicket",
+  "repository": "CristianoRFB/RFB-Ticket",
+  "canonical_checkpoint": "PROJECT_STATUS.json",
+  "default_branch": "main",
+  "default_branch_baseline": "dbd16775e4b4f47a855fd67a736294421ee1f6b9",
+  "working_branch": "feature/rfb-starter-pack-v1",
+  "draft_pr": 1,
+  "last_reviewed_code_sha": "4d6b5a437548f161e80a1ffe230cb26c2cfbb44c",
+  "stage": "G3_LOCAL_SANDBOX_EXPANDED_TESTED_REMOTE_AND_RELEASE_BLOCKED",
+  "user_target_percent": 90,
+  "verified_completion_percent": null,
+  "features_code": "F01–F12 implementados em diferentes níveis de sandbox, sem homologação integral; F04/F05/F10 são fictícios. Rastrear docs/ACCEPTANCE-MATRIX.md.",
+  "major_missing": [
+    "Firebase Authentication real não configurado; apenas chaves e tokens de teste sintéticos no Workerd e VITE mock no browser",
+    "Cloudflare D1 remoto isolado não provisionado; testes só Workerd D1 local",
+    "Gateway financeiro externo em modo sandbox real não integrado; checkout/reembolso continuam fake",
+    "Leitor por câmera iOS/Android e operação de dois dispositivos reais não homologados",
+    "T001-T058: 32 com código sandbox, 23 parciais e 3 ausentes; nenhuma cobertura E2E autenticada real",
+    "Rate limiting global por IP e antifraude, privacidade LGPD/retencao, backup/restauração remotos e alertas não homologados",
+    "Plano Free e quotas da conta alvo não verificadas; sem aprovação para qualquer cobrança ou implantação pública"
+  ],
+  "tests": {
+    "backend_node_sqlite": "PASS_19_OF_19_NODE24",
+    "domain": "PASS_5_OF_5_NODE24",
+    "workerd_d1_local": "PASS_11_OF_11_MINIFLARE_WORKERD_D1_NODE24",
+    "vitest_frontend": "PASS_15_OF_15",
+    "playwright_demo_chromium": "PASS_6_OF_6",
+    "cloudflare_dry_run": "PASS_NO_DEPLOY",
+    "cf_d1_migration_local": "PASS_SYNTHETIC_UUID",
+    "build_typecheck": "PASS_NODE24",
+    "github_actions": "PASS_4_OF_4_JOBS",
+    "github_actions_run": 45305151761,
+    "remote_firebase": "NOT_RUN",
+    "remote_d1": "NOT_RUN",
+    "physical_device": "NOT_RUN",
+    "payment_provider": "NOT_RUN",
+    "browser_last_known": "PASS_6_OF_6_DEMO_AT_C0F85",
+    "playwright_sandbox_public_mocked": "PASS_6_OF_6_FAKE_FIREBASE_CONFIG_MOCKED_API"
+  },
+  "cloudflare": {
+    "account_read_only_audited": true,
+    "specific_ticket_resources_created": false,
+    "deploy": "NOT_RUN",
+    "plan_cost": "NOT_VERIFIED_FOR_TARGET",
+    "local_d1_emulator": "PASS_8_TESTS",
+    "local_cf_cli_dry_run": "PASS"
+  },
+  "firebase": {
+    "project_configured": false,
+    "auth_live_test": "NOT_RUN",
+    "jwks_with_signed_test_tokens": "PASS_IN_WORKERD_LOCAL"
+  },
+  "real_revenue": false,
+  "production": false,
+  "no_merge": true,
+  "no_billing": true,
+  "next_action": "Verify S011 CI, then isolated Firebase/D1 and PSP sandbox acceptance; no merge/deploy without authorization.",
+  "scope_details": {
+    "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
+    "F05_webhook": "FAKE_PROVIDER_SIGNED_WEBHOOK_IMPLEMENTED_LOCAL_NO_REAL_GATEWAY",
+    "API_routes": "SANDBOX_ONLY",
+    "admin_readonly": "CODE_IMPLEMENTED_FAIL_CLOSED_NO_UID_CONFIGURED"
+  },
+  "github_triage": {
+    "open_issues": 0,
+    "open_prs": 1,
+    "pr1": "OPEN_DRAFT_KEEP_OPEN",
+    "reviews": 0,
+    "comments": 0,
+    "base_main": "UNCHANGED"
+  },
+  "code_features": {
+    "F01": "CATALOG_EVENT_CRUD_PAGINATED_PARAMETERIZED_SEARCH_LOCAL_TESTED",
+    "F02": "CAPACITY_ATOMIC_D1_HOLD_LIMIT_AND_CLIENT_RETRY_IDEMPOTENCY_LOCAL_TESTED",
+    "F03": "AUTOINCREMENT_TICKET_NUMBERS_LOCAL_TESTED",
+    "F04": "SANDBOX_FAKE_ONLY",
+    "F05": "HMAC_FAKE_PROVIDER_WEBHOOK_LOCAL_TESTED_REAL_GATEWAY_NOT_DONE",
+    "F06": "HMAC_SIGNED_ROTATABLE_QR_LOCAL_TESTED",
+    "F07": "SINGLE_USE_ATOMIC_CHECKIN_AND_AUDIT_PLUS_STABLE_RETRY_KEY_LOCAL_TESTED",
+    "F08": "EVENT_SCOPED_GATE_CAMERA_GUARDED_RECENT_ENTRIES_PAGINATED_PHYSICAL_NOT_RUN",
+    "F09": "OWNER_STATS_PRIVATE_CSV_PAGINATED_GATE_REPORT_LOCAL_TESTED",
+    "F10": "CANCEL_REFUND_FAKE_ATOMIC_CAPACITY_RELEASE_LOCAL_TESTED",
+    "F11": "ONE_TIME_TRANSFER_TOKEN_ROTATION_WITH_UI_CONFIRMATION_LOCAL_TESTED",
+    "F12": "ATOMIC_CHECKIN_AUDIT_ADMIN_READONLY_SANITIZED_PAGINATION_LOCAL_TESTED"
+  },
+  "screens": {
+    "total_catalogued": 58,
+    "code_sandbox_only": 32,
+    "partial_sandbox": 23,
+    "not_implemented": 3,
+    "live_authenticated_browser_qa": "NOT_RUN",
+    "public_sandbox_mocked_browser": "PASS_6_OF_6"
+  },
+  "diagrams": {
+    "original_drafts": 7,
+    "new_as_built_mermaid": 7,
+    "homologated": false
+  },
+  "brand": {
+    "ticket_icon_svg_integrated_in_demo_and_sandbox": true,
+    "logo_approval": "PENDING_CONCEPT_V1",
+    "favicon": "NOT_DONE"
+  },
+  "current_evolve": {
+    "id": "S011",
+    "state": "PARTIALLY_VERIFIED",
+    "baseline": "2334eecbe2ac625d90465967d54b6b22041d6542",
+    "baseline_ci": 45305517218,
+    "objective": "Limit JSON request bytes while streaming, including fake webhook, without new infrastructure",
+    "acceptance": [
+      "reject oversized byte streams and malformed UTF-8",
+      "preserve valid request behavior",
+      "test boundary and webhook signature"
+    ],
+    "rollback": "Revert S011 patch on draft branch; no schema change.",
+    "external_gates": "unchanged",
+    "code_sha": "91c6cf1458267ad01faf6e6c00e5fc295fb30daf",
+    "tests_added": 3,
+    "ci": {
+      "run_id": 45912688578,
+      "status": "in_progress",
+      "backend": "PASS",
+      "frontend": "IN_PROGRESS",
+      "workerd": "IN_PROGRESS",
+      "browser": "IN_PROGRESS"
+    },
+    "limitations": "Remote Firebase, D1, PSP, hardware, rate limiting and visual QA remain open."
+  }
+}

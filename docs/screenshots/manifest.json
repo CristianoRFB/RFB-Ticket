@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "product": "RFBTicket",
+  "status": "NOT_CAPTURED",
+  "screenshots": [
+    {
+      "id": "S1",
+      "caption": "Catálogo de eventos",
+      "status": "NOT_CAPTURED",
+      "kind": "REAL_CAPTURE",
+      "path": null,
+      "commit_sha": null,
+      "viewport": null,
+      "captured_at": null,
+      "environment": null,
+      "privacy_checked": false
+    },
+    {
+      "id": "S2",
+      "caption": "Evento e lotes",
+      "status": "NOT_CAPTURED",
+      "kind": "REAL_CAPTURE",
+      "path": null,
+      "commit_sha": null,
+      "viewport": null,
+      "captured_at": null,
+      "environment": null,
+      "privacy_checked": false
+    },
+    {
+      "id": "S3",
+      "caption": "Ingresso QR sandbox",
+      "status": "NOT_CAPTURED",
+      "kind": "REAL_CAPTURE",
+      "path": null,
+      "commit_sha": null,
+      "viewport": null,
+      "captured_at": null,
+      "environment": null,
+      "privacy_checked": false
+    },
+    {
+      "id": "S4",
+      "caption": "Validação da portaria",
+      "status": "NOT_CAPTURED",
+      "kind": "REAL_CAPTURE",
+      "path": null,
+      "commit_sha": null,
+      "viewport": null,
+      "captured_at": null,
+      "environment": null,
+      "privacy_checked": false
+    }
+  ],
+  "notes": "Screenshots reais não estão versionados nesta branch; nenhum mockup deve ser rotulado como prova."
+}

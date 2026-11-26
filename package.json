@@ -1,0 +1,43 @@
+{
+  "name": "rfb-ticket",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:domain": "node --experimental-strip-types --test tests/ticketDomain.node-test.mjs",
+    "test:api": "node --experimental-sqlite --test tests/api.node-test.mjs",
+    "test:backend": "node --experimental-sqlite --test tests/api.node-test.mjs",
+    "dev:sandbox": "cf dev",
+    "deploy:dry": "cf deploy --dry-run",
+    "deploy:sandbox": "cf deploy",
+    "dev:demo": "vite --config vite.demo.config.ts",
+    "test:e2e": "playwright test",
+    "test:workerd": "node --test tests/workerd.node-test.mjs",
+    "test:e2e:sandbox": "playwright test --config playwright.sandbox.config.ts"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "firebase": "^13.4.0",
+    "qrcode.react": "^4.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "vite": "^7.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "cf": "^1.0.0-rc.2",
+    "@cloudflare/vite-plugin": "^2.0.0-rc.0",
+    "@playwright/test": "^1.50.0",
+    "miniflare": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=24.12.0"
+  }
+}
