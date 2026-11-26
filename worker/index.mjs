@@ -1,4 +1,5 @@
 import { authenticate } from './auth.mjs';
+import { readBoundedUtf8 } from './request-body.mjs';
 import { createTicketToken, parseTicketToken, validateTicketToken } from './crypto.mjs';
 import { verifySandboxWebhook } from './webhook.mjs';
 
@@ -14,7 +15,9 @@ function id(value) {if(typeof value !== 'string'|| !uuid.test(value))bad('INVALI
 function integer(value,min,max) {if(!Number.isSafeInteger(value)||value<min||value>max)bad('INVALID_INPUT');return value;}
 async function body(request) {
   if (!request.headers.get('content-type')?.startsWith('application/json')) bad('JSON_REQUIRED',415);
-  const text=await request.text();if(text.length>10000)bad('PAYLOAD_TOO_LARGE',413);
+  let text;
+  try { text = await readBoundedUtf8(request, 10000); }
+  catch (e) { if (e.message === 'PAYLOAD_TOO_LARGE') bad('PAYLOAD_TOO_LARGE',413); bad('INVALID_JSON'); }
   try{const value=JSON.parse(text);if(!value||typeof value!=='object'||Array.isArray(value))bad('INVALID_JSON');return value;}
   catch(e){if(e instanceof ApiError)throw e;bad('INVALID_JSON');}
 }
