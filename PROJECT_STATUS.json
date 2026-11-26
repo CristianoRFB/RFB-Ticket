@@ -56,7 +56,7 @@
   "production": false,
   "no_merge": true,
   "no_billing": true,
-  "next_action": "Sem merge/deploy: primeiro validar Free quotas, projeto Firebase Authentication exclusivo e banco D1 staging isolado com permissão; então executar usuários reais fictícios, corrida D1 remota, câmera Android/iOS, recuperação de falhas, PSP sandbox real, backup/restore, LGPD e aceites F01–F12/T001–T058.",
+  "next_action": "Verify S011 CI, then isolated Firebase/D1 and PSP sandbox acceptance; no merge/deploy without authorization.",
   "scope_details": {
     "F03_ticket_numbers": "IMPLEMENTED_LOCAL_SQLITE_9_TESTS_NOT_LIVE_D1",
     "F05_webhook": "FAKE_PROVIDER_SIGNED_WEBHOOK_IMPLEMENTED_LOCAL_NO_REAL_GATEWAY",
@@ -105,7 +105,7 @@
   },
   "current_evolve": {
     "id": "S011",
-    "state": "BEFORE_WRITE",
+    "state": "IMPLEMENTED_UNVERIFIED",
     "baseline": "2334eecbe2ac625d90465967d54b6b22041d6542",
     "baseline_ci": 45305517218,
     "objective": "Limit JSON request bytes while streaming, including fake webhook, without new infrastructure",
@@ -115,6 +115,10 @@
       "test boundary and webhook signature"
     ],
     "rollback": "Revert S011 patch on draft branch; no schema change.",
-    "external_gates": "unchanged"
+    "external_gates": "unchanged",
+    "code_sha": "91c6cf1458267ad01faf6e6c00e5fc295fb30daf",
+    "tests_added": 3,
+    "ci": [],
+    "limitations": "Remote Firebase, D1, PSP, hardware, rate limiting and visual QA remain open."
   }
 }
