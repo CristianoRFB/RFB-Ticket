@@ -366,4 +366,53 @@ test('gate reports paginate and omit private identifiers',async()=>{
   assert.equal((await api('/api/events/'+eventId+'/audit','GET',null,gate)).httpStatus,403);
 });
 
+
+test('S011 bounded JSON rejects oversize UTF-8 and malformed bytes without writes', async()=>{
+ const base={title:'Limite QA',city:'Jales',startsAt:'2028-01-01T00:00:00Z'};
+ const before=db.prepare('SELECT COUNT(*) AS n FROM events').get().n;
+ const headers={authorization:'Bearer '+a,'content-type':'application/json'};
+ const send=async(payload,extraHeaders={})=>handleApi(new Request('https://rfb.example/api/events',{method:'POST',headers:{...headers,...extraHeaders},body:payload}),env);
+ const tooLarge=JSON.stringify({...base,description:'é'.repeat(6000)});
+ assert.ok(tooLarge.length<10000 && Buffer.byteLength(tooLarge)>10000);
+ assert.equal((await send(tooLarge)).status,413);
+ assert.equal((await send('{}',{'content-length':'10001'})).status,413);
+ const invalid=await send(new Uint8Array([123,34,255,34,58,49,125]));
+ assert.equal(invalid.status,400);
+ assert.equal((await invalid.json()).error,'INVALID_JSON');
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM events').get().n,before);
+ const empty=JSON.stringify({...base,description:''});
+ const exact=JSON.stringify({...base,description:'x'.repeat(10000-Buffer.byteLength(empty))});
+ assert.equal(Buffer.byteLength(exact),10000);
+ assert.equal((await send(exact)).status,201);
+ assert.equal((await send(exact+' ')).status,413);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM events').get().n,before+1);
+});
+test('S011 streaming reader stops oversized chunks and decodes split UTF-8',async()=>{
+ const {readBoundedUtf8}=await import('../worker/request-body.mjs');
+ const encoder=new TextEncoder();
+ const bytes=encoder.encode('ação');
+ function request(parts){
+  return new Request('https://rfb.example/api/events',{method:'POST',duplex:'half',body:new ReadableStream({
+   start(controller){for(const chunk of parts)controller.enqueue(chunk);controller.close();}
+  })});
+ }
+ assert.equal(await readBoundedUtf8(request([bytes.slice(0,2),bytes.slice(2)]),bytes.length),'ação');
+ assert.equal(await readBoundedUtf8(request([bytes]),bytes.length),'ação');
+ await assert.rejects(readBoundedUtf8(request([bytes,new Uint8Array([32])]),bytes.length),/PAYLOAD_TOO_LARGE/);
+ await assert.rejects(readBoundedUtf8(request([new Uint8Array([0xc3])]),2),/INVALID_BODY/);
+});
+test('S011 signed oversized fake webhook is rejected before processing',async()=>{
+ const stamp=String(Math.floor(Date.now()/1000));
+ const raw=JSON.stringify({status:'sandbox_paid',webhookId:randomUUID(),orderId:randomUUID(),padding:'é'.repeat(2200)});
+ assert.ok(raw.length<4096 && Buffer.byteLength(raw)>4096);
+ const signature=createHmac('sha256',env.SANDBOX_WEBHOOK_SECRET).update(stamp+'.'+raw).digest('hex');
+ const before=db.prepare('SELECT COUNT(*) AS n FROM sandbox_webhooks').get().n;
+ const response=await handleApi(new Request('https://rfb.example/api/webhooks/sandbox',{
+   method:'POST',headers:{'content-type':'application/json','x-rfb-timestamp':stamp,'x-rfb-signature':signature},body:raw
+ }),env);
+ assert.equal(response.status,401);
+ assert.equal((await response.json()).error,'WEBHOOK_UNAUTHORIZED');
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM sandbox_webhooks').get().n,before);
+});
+
 after(()=>{globalThis.fetch=originalFetch;db.close();});
