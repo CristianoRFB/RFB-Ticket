@@ -85,3 +85,13 @@ Inventário de telas T001–T058 atualizado em `docs/UX-DESIGN-AND-QA.md`: **26*
 - QA: Node SQLite 19/19; Workerd D1 local 11/11; domínio 5/5; Vitest 15/15; Playwright demo 6/6; Playwright sandbox público mockado 6/6; tsc/build/cf dry-run/CF D1 local migration PASS.
 - UX T001–T058: 32 codificados no sandbox, 23 parciais, 3 ausentes; nenhum aceite E2E autenticado. Metodologia mantém alvo do usuário 90% **não comprovado**.
 - Infra remota, custo, identidade, pagamentos, câmera física, restauração e LGPD continuam NOT_RUN. Não houve merge/deploy e nenhum recurso pago foi criado.
+
+
+## S011 — 26/11/2026: bounded request input
+
+- Baseline `2334eecbe2ac625d90465967d54b6b22041d6542`: [CI 45305517218](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45305517218), 4 jobs SUCCESS.
+- Code `91c6cf1458267ad01faf6e6c00e5fc295fb30daf`: byte-limited streaming reader (10,000 bytes JSON, 4,096 bytes fake webhook), early rejection of oversized declared lengths, actual chunk counting regardless of declared length, fatal UTF-8 decoding and cancellation on invalid input. No new services, dependencies, schema or payment behavior.
+- Three additional Node API regression tests: byte boundary/multibyte/no writes, fragmented stream and malformed UTF-8, oversized signed fake webhook/no writes. [CI 45912688578](https://github.com/CristianoRFB/RFB-Ticket/actions/runs/45912688578) **queued at verification**. Not PASS yet.
+- AV-01/05/13/17: targeted negative tests added; AV-02/20: report pending CI; AV-08/14: existing fake webhook signature and replay tests retained. Rate limiting distributed is not implemented by this size limit. G3 pending, G4/G5 blocked. Visual capture/inspection NOT_RUN; no UI changed.
+- GitHub triage at closing: 0 open issues, 1 open PR, #1 draft=true, main=dbd16775e4b4f47a855fd67a736294421ee1f6b9. Keep draft, no merge/deploy/billing. No proven overall completion percentage.
+- Next: verify S011 code run, remediate any failure, then stage Firebase/D1 and external sandbox PSP only after permissions/free quotas. Rollback: revert S011 code commits on working branch; no data migration.
